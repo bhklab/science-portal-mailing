@@ -17,11 +17,8 @@ section1 = f'''Since the last update, PM Science Portal has added {publication_t
 	{code_total} code repositories, {dataset_total} datasets, {container_total} containers, {trial_total} trials,
 	{result_total} results, {protocol_total} protocols, and {package_total} packages.'''
 
-print(section1)
-
-
-first_name = 'Matthew'
-last_name = 'Boccalon'
+first_name = 'Benjamin'
+last_name = 'Haibe-Kains'
 indiv_publication_total = 25
 indiv_code_total= 25
 indiv_dataset_total= 25
@@ -38,7 +35,7 @@ section2 = f'''Congratulations to {first_name} {last_name} for being the PM Scie
 
 message = Mail(
     from_email=os.getenv('FROM_EMAIL'),
-    to_emails=['matthew.boccalon@uhn.ca'],
+    to_emails=['matthew.boccalon@uhn.ca', 'benjamin.haibe-kains@uhn.ca'],
     subject='Sendgrid Email',
     html_content='<strong>News Letter</strong>')
 
@@ -47,7 +44,7 @@ message.dynamic_template_data = {
     
 	'section2': section2,
     
-	'general_text': 'We hope you are enjoying the Science Portal!',
+	# 'general_extra_text': 'We hope you are enjoying the Science Portal thus far!',
     
 	'update1_date': 'August, 2025',
     'update1_heading': 'End of Summer Update',
