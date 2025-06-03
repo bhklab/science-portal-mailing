@@ -7,4 +7,5 @@ This repository is a compendium of scripts that execute various automated emails
 ```bash
 SENDGRID_API_KEY=
 FROM_EMAIL=
+DIRECTOR_EMAIL=
 ```
