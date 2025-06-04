@@ -6,12 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-router = APIRouter(prefix="/email") #Adding email
+router = APIRouter(prefix="/email") #Adding email part of route
 
 @router.post("/director")
 async def email_director(pub):
-
-    scraping(pub)
 
     message = Mail(
         from_email=os.getenv('FROM_EMAIL'),
@@ -47,14 +45,5 @@ async def email_director(pub):
     except Exception as e:
         print(e)
 
-
-
     return {"message": "Hello World"}
 
-async def scraping(pub):
-    '''
-        Cross ref and supplementary scrape for newly submitted publication
-        returns: boolean (true if success, false if unsuccessful)
-    '''
-
-    ### E2E scraping ###
