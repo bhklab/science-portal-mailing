@@ -4,3 +4,6 @@
 *.egg-info
 __pycache__
 .env
+profile
+output_data
+screenshots
