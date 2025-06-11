@@ -57,7 +57,6 @@ async def scraping(doi: str = Body(..., embed=True)):
     time.sleep(1)
 
     body_text = await tab.get_content()
-    print(body_text)
 
     await tab.scroll_down(100)
     await tab.scroll_down(100)
@@ -70,14 +69,12 @@ async def scraping(doi: str = Body(..., embed=True)):
     for ele in elements:
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
-            if "http" in match:
+            if "http" in match.group(1):
                 links.add(match.group(1))
 
-    print(links)
         
     links.update(scrape_body(body_text))
         
-
     classified_links = classify_all(links)
 
     publication.supplementary = classified_links
@@ -88,6 +85,8 @@ async def scraping(doi: str = Body(..., embed=True)):
 
     await tab.close()
     browser.stop()
+
+    scraping_pub_collection.insert_one(publication.model_dump())
 
     return publication
 
