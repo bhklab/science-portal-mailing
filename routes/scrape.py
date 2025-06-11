@@ -70,7 +70,8 @@ async def scraping(doi: str = Body(..., embed=True)):
     for ele in elements:
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
-            links.add(match.group(1))
+            if "http" in match:
+                links.add(match.group(1))
 
     print(links)
         
