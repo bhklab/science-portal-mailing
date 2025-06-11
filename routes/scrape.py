@@ -79,7 +79,6 @@ async def scraping(doi: str = Body(..., embed=True)):
             display.stop()
 
     except Exception as e:
-        await tab.close()
         browser.stop()
         if display:
             display.stop()
