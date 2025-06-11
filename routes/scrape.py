@@ -79,7 +79,6 @@ async def scraping(doi: str = Body(..., embed=True)):
             display.stop()
 
     except Exception as e:
-        browser.stop()
         if display:
             display.stop()
         raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
