@@ -42,30 +42,50 @@ async def scraping(doi: str = Body(..., embed=True)):
 
     publication =  await crossref_scrape(doi)
 
-    browser = await uc.start(
-        headless=False,
-        # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
-        # browser_executable_path="/path/to/some/other/browser",
-        # browser_args=['--some-browser-arg=true', '--some-other-option'],
-        lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
-        no_sandbox=True
-    )
+    try:
 
-    tab = await browser.get(f'https://doi.org/{doi}')
-    await tab.select('body') # waits for page to render first
+        display = None
 
-    time.sleep(1)
+        if os.getenv("LINUX") == "yes":
+            display = Display(visible=0, size=(1920, 1080))
+            display.start()
 
-    body_text = await tab.get_content()
+        browser = await uc.start(
+            headless=False,
+            # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
+            # browser_executable_path="/path/to/some/other/browser",
+            # browser_args=['--some-browser-arg=true', '--some-other-option'],
+            lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
+            no_sandbox=True
+        )
 
-    await tab.scroll_down(100)
-    await tab.scroll_down(100)
-    await tab.scroll_down(200)
+        tab = await browser.get(f'https://doi.org/{doi}')
+        await tab.select('body') # waits for page to render first
 
-    elements = await tab.select_all("a[href]")
-    await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
+        time.sleep(1)
 
-    links = set ()
+        body_text = await tab.get_content()
+
+        await tab.scroll_down(100)
+        await tab.scroll_down(100)
+        await tab.scroll_down(200)
+
+        elements = await tab.select_all("a[href]")
+        await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
+
+        await tab.close()
+        browser.stop()
+        if display:
+            display.stop()
+
+    except Exception as e:
+        await tab.close()
+        browser.stop()
+        if display:
+            display.stop()
+        raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
+
+    links = set()
     for ele in elements:
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
@@ -82,9 +102,6 @@ async def scraping(doi: str = Body(..., embed=True)):
 
     write_to_csv("output_data/output.csv", doi, classified_links)
     write_to_json("output_data/raw_links.json", doi, links)
-
-    await tab.close()
-    browser.stop()
 
     scraping_pub_collection.insert_one(publication.model_dump())
 
