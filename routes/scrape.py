@@ -45,6 +45,7 @@ async def scraping(doi: str = Body(..., embed=True)):
     try:
 
         display = None
+        browser = None
 
         if os.getenv("LINUX") == "yes":
             display = Display(visible=0, size=(1920, 1080))
@@ -75,10 +76,13 @@ async def scraping(doi: str = Body(..., embed=True)):
 
         await tab.close()
         browser.stop()
+        
         if display:
             display.stop()
 
     except Exception as e:
+        if browser:
+            browser.stop()
         if display:
             display.stop()
         raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
@@ -87,7 +91,7 @@ async def scraping(doi: str = Body(..., embed=True)):
     for ele in elements:
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
-            if "http" in match.group(1):
+            if "https://" in match.group(1) or "http://" in match.group(1):
                 links.add(match.group(1))
 
         

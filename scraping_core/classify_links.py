@@ -92,7 +92,7 @@ def classify_link(link: str):
     return None, None
 
 def classify_all(links: set[str]):
-    result = {group: {subcat: [] for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
+    result = {group: {subcat: set() for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
 
     for link in links:
         if is_dud(link):
@@ -100,7 +100,7 @@ def classify_all(links: set[str]):
         group, subcat = classify_link(link)
         if group and subcat:
             cleaned = strip_query_params(link)
-            result[group][subcat].append(cleaned)
+            result[group][subcat].add(cleaned)
 
     return result
 

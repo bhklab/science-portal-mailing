@@ -1,0 +1,16 @@
+[Unit]
+Description=Science Portal FastAPI App
+After=network.target
+
+[Service]
+User=admin_uhn
+Group=admin_uhn
+WorkingDirectory=/var/www/science-portal-mailing
+ExecStart=/bin/bash -c 'cd /var/www/science-portal-mailing && /home/admin_uhn/.pixi/bin/pixi run prod_start'
+Restart=always
+Environment=PORT=8000
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
