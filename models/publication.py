@@ -19,3 +19,5 @@ class Publication(BaseModel):
     scraped: bool
     fanout: Optional[dict[str, bool]] = None
     supplementary: Optional[dict[str, list[str]]] = None
+    otherLinks: Optional[dict] = None
+    submitter: str   
