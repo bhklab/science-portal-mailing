@@ -92,7 +92,7 @@ async def scraping(doi: str = Body(..., embed=True)):
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
             if "https://" in match.group(1) or "http://" in match.group(1):
-                links.add(match.group(1))
+                links.add(match.group(1).lower())
 
         
     links.update(scrape_body(body_text))
