@@ -21,8 +21,8 @@ SUPPLEMENTARY_PATTERNS = {
     "gitlab": re.compile(r"https?://(?:www\.)?gitlab\.com/[\w\-]+/[\w\-]+(?:/.*)?", re.IGNORECASE),
     "geo": re.compile(r"https?://(?:www\.)?ncbi\.nlm\.nih\.gov/geo/query/acc\.cgi\?acc=GSE\d+|ftp://ftp\.ncbi\.nlm\.nih\.gov/geo/.+|https?://identifiers\.org/GEO:GSE\d+", re.IGNORECASE),
     "dbgap": re.compile(r"https?://(?:www\.)?ncbi\.nlm\.nih\.gov/projects/gap/cgi-bin/study\.cgi\?study_id=phs\d+", re.IGNORECASE),
-	"kaggle": re.compile(r"https?://[^ ]*kaggle[^ ]*", re.IGNORECASE),
-	"dryad": re.compile(r"https?://[^ ]*datadryad\.org/(?!($|stash/?$))[^ ]+|https?://[^ ]*doi\.org/10\.5061/dryad\.[^ ]+", re.IGNORECASE),
+    "kaggle": re.compile(r"https?://[^ ]*kaggle[^ ]*", re.IGNORECASE),
+    "dryad": re.compile(r"https?://[^ ]*datadryad\.org/(?!($|stash/?$))[^ ]+|https?://[^ ]*doi\.org/10\.5061/dryad\.[^ ]+", re.IGNORECASE),
     "empiar": re.compile(r"https?://(?:www\.)?ebi\.ac\.uk/empiar/EMPIAR-\d+", re.IGNORECASE),
     "gigadb": re.compile(r"https?://(?:www\.)?gigadb\.org/dataset/\d+", re.IGNORECASE),
     "zenodo": re.compile(r"https?://(?:www\.)?(zenodo\.org|doi\.org/10\.5281/zenodo\.\d+)", re.IGNORECASE),
@@ -32,9 +32,9 @@ SUPPLEMENTARY_PATTERNS = {
     "proteinDataBank": re.compile(r"https?://(?:www\.)?(rcsb|wwpdb)\.org/.+|https?://(?:www\.)?doi\.org/10\.2210/pdb\w+/pdb", re.IGNORECASE),
     "dataverse": re.compile(r"https?://(?:www\.)?(dataverse\..+?|doi\.org/10\.7910/DVN/[\w]+)", re.IGNORECASE),
     "openScienceFramework": re.compile(r"https?://(?:osf\.io/\w+|doi\.org/10\.17605/OSF\.IO/\w+)", re.IGNORECASE),
-	"finngenGitbook": re.compile(r"https?://[^ \s]*finngen[^ \s]*", re.IGNORECASE),
+    "finngenGitbook": re.compile(r"https?://[^ \s]*finngen[^ \s]*", re.IGNORECASE),
     "gtexPortal": re.compile(r"https?://(?:www\.)?gtexportal\.org/.+|https?://gtexportal\.org/.+", re.IGNORECASE),
-	"ebiAcUk": re.compile(r"https?://[^ ]*ebi\.ac\.uk[^ ]*|ftp://[^ ]*sra\.ebi\.ac\.uk[^ ]*|https?://[^ ]*ena\.embl[^ ]*", re.IGNORECASE),
+    "ebiAcUk": re.compile(r"https?://[^ ]*ebi\.ac\.uk[^ ]*|ftp://[^ ]*sra\.ebi\.ac\.uk[^ ]*|https?://[^ ]*ena\.embl[^ ]*", re.IGNORECASE),
     "mendeley": re.compile(r"https?://(?:www\.)?mendeley\.com/catalogue/[\w\-]+/?", re.IGNORECASE),
     "R": re.compile(r"\.rds($|\?)", re.IGNORECASE),
     "codeocean": re.compile(
@@ -46,22 +46,22 @@ SUPPLEMENTARY_PATTERNS = {
     "figshare": re.compile(r"https?://(?:www\.)?(figshare\.com|doi\.org/10\.6084/m9\.figshare\.\d+)", re.IGNORECASE),
     "clinicalTrial": re.compile(r"https?://(?:www\.)?clinicaltrials\.gov/ct2/show/NCT\d+/?(?:\?.*)?", re.IGNORECASE),
     "euCTR": re.compile(r"https?://(?:www\.)?clinicaltrialsregister\.eu/ctr-search/trial/\d{4}-\d{6}-\d{2}/[A-Z]{2}", re.IGNORECASE),
-	"vivli": re.compile(r"https?://[^ ]*vivli[^ ]*", re.IGNORECASE),
+    "vivli": re.compile(r"https?://[^ ]*vivli[^ ]*", re.IGNORECASE),
     "yoda": re.compile(r"https?://(?:www\.)?yoda\.yale\.edu/.+", re.IGNORECASE),
     "bioconductor": re.compile(r"https?://(?:www\.)?bioconductor\.org/packages/(?:release|[\d\.]+)/bioc/html/.+|https?://(?:www\.)?bioconductor\.org/packages/[\w\-]+", re.IGNORECASE),
     "pypi": re.compile(r"https?://(?:www\.)?pypi\.org/project/.+|https?://pypi\.python\.org/pypi/.+", re.IGNORECASE),
     "CRAN": re.compile(r"https?://(?:cran\.(r-project|rstudio)\.org|ggplot2\.tidyverse\.org)/web/packages/.+", re.IGNORECASE),
     # "IEEE": re.compile(r"https?://(?:www\.)?ieeexplore\.ieee\.org/document/\d+", re.IGNORECASE),
-	"IEEE": re.compile(r"https?://[^ ]*ieee[^ ]*", re.IGNORECASE),
+    "IEEE": re.compile(r"https?://[^ ]*ieee[^ ]*", re.IGNORECASE),
     "pdf": re.compile(r"\.pdf($|\?)", re.IGNORECASE),
     "docx": re.compile(r"\.docx($|\?)", re.IGNORECASE),
     "zip": re.compile(r"\.zip($|\?)", re.IGNORECASE),
     "protocolsIO": re.compile(r"https?://(?:www\.)?protocols\.io/view/.+", re.IGNORECASE),
-	"bioProtocol": re.compile(r"https?://(?:www\.)?bio-protocol\.org/(en/bpdetail|exchange/protocoldetail)\?id=\d+.*"
-		r"|https?://en-cdn\.bio-protocol\.org/pdf/bio-protocol\d+\.pdf.*"
-		r"|https?://doi\.org/10\.21769/BioProtoc\.\d+",
-		re.IGNORECASE
-	),
+    "bioProtocol": re.compile(r"https?://(?:www\.)?bio-protocol\.org/(en/bpdetail|exchange/protocoldetail)\?id=\d+.*"
+        r"|https?://en-cdn\.bio-protocol\.org/pdf/bio-protocol\d+\.pdf.*"
+        r"|https?://doi\.org/10\.21769/BioProtoc\.\d+",
+        re.IGNORECASE
+    ),
     "benchling": re.compile(r"https?://(?:www\.)?benchling\.com/(protocols|s)/[^\s]+", re.IGNORECASE),
     "labArchives": re.compile(r"https?://(?:www\.)?mynotebook\.labarchives\.com/.+", re.IGNORECASE)
 }
@@ -92,7 +92,7 @@ def classify_link(link: str):
     return None, None
 
 def classify_all(links: set[str]):
-    result = {group: {subcat: set() for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
+    result = {group: {subcat: [] for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
 
     for link in links:
         if is_dud(link):
@@ -100,7 +100,8 @@ def classify_all(links: set[str]):
         group, subcat = classify_link(link)
         if group and subcat:
             cleaned = strip_query_params(link)
-            result[group][subcat].add(cleaned)
+            if cleaned not in result[group][subcat]:
+                result[group][subcat].append(cleaned)
 
     return result
 
