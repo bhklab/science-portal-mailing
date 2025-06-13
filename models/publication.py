@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class Publication(BaseModel):
-    PMID: Optional[int] = None
+    PMID: Optional[int] = -1
     doi: str
     date: str
     name: str
@@ -18,6 +18,6 @@ class Publication(BaseModel):
     image: Optional[str] = None
     scraped: bool
     fanout: Optional[dict[str, bool]] = None
-    supplementary: Optional[dict[str, list[str]]] = None
-    otherLinks: Optional[dict] = None
+    supplementary: Optional[dict[str, dict[str, list[str]]]] = None
+    otherLinks: Optional[list[dict]] = None
     submitter: str   

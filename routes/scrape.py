@@ -109,14 +109,98 @@ async def scraping(doi: str = Body(..., embed=True)):
 
     return publication
 
+@router.post("/publication/one")
+async def scraping(pub: Publication = Body(...)):
+    '''
+        Cross ref and supplementary scrape for newly submitted publication
+        returns: boolean (true if success, false if unsuccessful)
+    '''
+
+    existing_doc = main_pub_collection.find_one({"doi": pub.doi})
+    
+    if existing_doc:
+        print("DOI exists.")
+        return "DOI exists."
+    else:
+        print("DOI does not exist yet.")
+
+    publication =  await crossref_scrape(pub)
+
+    try:
+
+        display = None
+        browser = None
+
+        if os.getenv("LINUX") == "yes":
+            display = Display(visible=0, size=(1920, 1080))
+            display.start()
+
+        browser = await uc.start(
+            headless=False,
+            # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
+            # browser_executable_path="/path/to/some/other/browser",
+            # browser_args=['--some-browser-arg=true', '--some-other-option'],
+            lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
+            no_sandbox=True
+        )
+
+        tab = await browser.get(f'https://doi.org/{pub.doi}')
+        await tab.select('body') # waits for page to render first
+
+        time.sleep(1)
+
+        body_text = await tab.get_content()
+
+        await tab.scroll_down(100)
+        await tab.scroll_down(100)
+        await tab.scroll_down(200)
+
+        elements = await tab.select_all("a[href]")
+        await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
+
+        await tab.close()
+        browser.stop()
+        
+        if display:
+            display.stop()
+
+    except Exception as e:
+        if browser:
+            browser.stop()
+        if display:
+            display.stop()
+        raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
+
+    links = set()
+    for ele in elements:
+        match = re.search(r'href="([^"]+)"', str(ele))
+        if match:
+            if "https://" in match.group(1) or "http://" in match.group(1):
+                links.add(match.group(1).lower())
+
+        
+    links.update(scrape_body(body_text))
+        
+    classified_links = classify_all(links)
+
+    publication.supplementary = classified_links
+
+
+    write_to_csv("output_data/output.csv", pub.doi, classified_links)
+    write_to_json("output_data/raw_links.json", pub.doi, links)
+
+    scraping_pub_collection.insert_one(publication.model_dump())
+
+    return publication
+
     
 
-async def crossref_scrape(doi: str) -> Publication:
+async def crossref_scrape(pub: Publication) -> Publication:
 
     try:
         # Get Crossref data for publication
         r = requests.get(
-            f'https://api.crossref.org/works/{doi}',
+            f'https://api.crossref.org/works/{pub.doi}',
             headers = {
                 'User-Agent': f'Python-requests',
                 'Mailto': "matthew.boccalon@uhn.ca"
@@ -135,37 +219,33 @@ async def crossref_scrape(doi: str) -> Publication:
                 affiliations = set()
 
                 # Iterate author list, utilize unidecode to remove special characters, add them to string
-                for i, pub in enumerate(data['message']['author']):
-                    author_string += f"{unidecode(pub.get('family', ''))}, {unidecode(pub.get('given', ''))}"
+                for i, author in enumerate(data['message']['author']):
+                    author_string += f"{unidecode(author.get('family', ''))}, {unidecode(author.get('given', ''))}"
                     if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
                         author_string += "; "
-                    for affil in pub['affiliation']:
+                    for affil in author['affiliation']:
                         affiliations.add(affil['name'])        
 
-                publication = Publication(  
-                    PMID = -1,
-                    doi = doi,
-                    date = data['message']['created']['date-time'][:10],
-                    name = data['message']['title'][0],
-                    journal = data['message'].get('container-title', [""])[0],
-                    type = data['message'].get('type'),
-                    authors = author_string,
-                    filteredAuthors = "",
-                    affiliations = affiliations,
-                    citations = data['message'].get('is-referenced-by-count', 0),
-                    dateAdded = str(datetime.datetime.now())[0:10],
-                    publisher = data['message']['publisher'],
-                    status = "published",
-                    image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '')
-                            .replace('%', '').replace('$', '').replace('/', '').replace('\\', '' )
-                            .replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg',
-                    fanout = {
+                    pub.PMID = -1
+                    pub.date = data['message']['created']['date-time'][:10]
+                    pub.name = data['message']['title'][0]
+                    pub.journal = data['message'].get('container-title', [""])[0]
+                    pub.type = data['message'].get('type')
+                    pub.authors = author_string
+                    pub.filteredAuthors = ""
+                    pub.affiliations.extend(list(affiliations))
+                    pub.citations = data['message'].get('is-referenced-by-count', 0)
+                    pub.dateAdded = str(datetime.datetime.now())[0:10]
+                    pub.publisher = data['message']['publisher']
+                    pub.status = "published"
+                    pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
+                    pub.fanout = {
                         "request": False,
                         "completed": False
-                    },
-                    scraped = True
-                )
-                return publication
+                    }
+                    pub.scraped = True
+
+                return pub
         else:
             raise HTTPException(status_code=404)
     except Exception as e:

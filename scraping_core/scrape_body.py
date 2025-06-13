@@ -12,12 +12,12 @@ def scrape_body(body_text: str):
 
     matches = GSE_MENTION_PATTERN.findall(str(body_text))
     for gse_id in matches:
-        gse_link = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE{gse_id}"
+        gse_link = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=gse{gse_id}"
         links.add(gse_link)
 
     matches = NCT_MENTION_PATTERN.findall(str(body_text))
     for nct_id in matches:
-        nct_link = f"https://clinicaltrials.gov/ct2/show/NCT{nct_id}"
+        nct_link = f"https://clinicaltrials.gov/ct2/show/nct{nct_id}"
         links.add(nct_link)
 
     print(f"Extracted {len(links)} GSE/NCT links")
