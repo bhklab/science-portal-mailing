@@ -145,10 +145,8 @@ async def scraping(pub: Publication = Body(...)):
         )
 
         tab = await browser.get(f'https://doi.org/{pub.doi}')
-        await tab.select('body') # waits for page to render first
-
         time.sleep(1)
-
+        await tab.select('body') # waits for page to render first
         body_text = await tab.get_content()
 
         await tab.scroll_down(100)
