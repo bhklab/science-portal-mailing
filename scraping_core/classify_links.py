@@ -1,10 +1,11 @@
 import re
 from urllib.parse import urlparse, parse_qs, urlunparse
+from scraping_core.write_to_json import write_to_json
 
 SUPPLEMENTARY = {
     "code": ["github", "gitlab"],
     "data": [
-        "geo", "dbgap", "kaggle", "dryad", "empiar", "gigadb", "zenodo", "ega", "xlsx", "csv",
+        "geo", "dbGap", "kaggle", "dryad", "empiar", "gigadb", "zenodo", "ega", "xlsx", "csv",
         "proteinDataBank", "dataverse", "openScienceFramework", "finngenGitbook", "gtexPortal",
         "ebiAcUk", "mendeley", "R"
     ],
@@ -20,7 +21,7 @@ SUPPLEMENTARY_PATTERNS = {
     "github": re.compile(r"^https?://(?:www\.)?github\.com/[\w\-]+/[\w\-]+(?:/[^/?#]+)?/?$", re.IGNORECASE),
     "gitlab": re.compile(r"https?://(?:www\.)?gitlab\.com/[\w\-]+/[\w\-]+(?:/.*)?", re.IGNORECASE),
     "geo": re.compile(r"https?://(?:www\.)?ncbi\.nlm\.nih\.gov/geo/query/acc\.cgi\?acc=GSE\d+|ftp://ftp\.ncbi\.nlm\.nih\.gov/geo/.+|https?://identifiers\.org/GEO:GSE\d+", re.IGNORECASE),
-    "dbgap": re.compile(r"https?://(?:www\.)?ncbi\.nlm\.nih\.gov/projects/gap/cgi-bin/study\.cgi\?study_id=phs\d+", re.IGNORECASE),
+    "dbGap": re.compile(r"https?://(?:www\.)?ncbi\.nlm\.nih\.gov/projects/gap/cgi-bin/study\.cgi\?study_id=phs\d+(?:\.v\d+(?:\.p\d+)?)?", re.IGNORECASE),
     "kaggle": re.compile(r"https?://[^ ]*kaggle[^ ]*", re.IGNORECASE),
     "dryad": re.compile(r"https?://[^ ]*datadryad\.org/(?!($|stash/?$))[^ ]+|https?://[^ ]*doi\.org/10\.5061/dryad\.[^ ]+", re.IGNORECASE),
     "empiar": re.compile(r"https?://(?:www\.)?ebi\.ac\.uk/empiar/EMPIAR-\d+", re.IGNORECASE),
@@ -66,10 +67,6 @@ SUPPLEMENTARY_PATTERNS = {
     "labArchives": re.compile(r"https?://(?:www\.)?mynotebook\.labarchives\.com/.+", re.IGNORECASE)
 }
 
-SUPPLEMENTARY_LINK_PATTERN = re.compile(r"""
-    https?://[^ \s<>"]+
-""", re.IGNORECASE | re.VERBOSE)
-
 DUD_PATTERNS = ["issues", "releases", "pull", "linkedin", "scopus", "adsabs", "faq", "enquiries-about-studies-not-listed-on-the-vivli-platform", "ourmember"]
 
 def is_dud(link: str) -> bool:
@@ -93,7 +90,7 @@ def classify_link(link: str):
 
 def classify_all(links: set[str]):
     result = {group: {subcat: [] for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
-
+    
     for link in links:
         if is_dud(link):
             continue
