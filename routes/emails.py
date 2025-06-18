@@ -36,20 +36,20 @@ async def email_director(pub: Publication = Body(...)):
     publication_breakdown = "The publication consists of "
 
     wording_map = {
-        'code': 'code repositorie(s)',
-        'data': 'dataset(s)',
-        'containers': 'container(s)',
-        'trials': 'trial(s)',
-        'results': 'result(s)',
-        'protocols': 'protocol(s)',
-        'packages': 'package(s)',
-        'miscellaneous': 'miscellaneous item(s)'
+        'code': 'code repo',
+        'data': 'dataset',
+        'containers': 'container',
+        'trials': 'trial',
+        'results': 'result',
+        'protocols': 'protocol',
+        'packages': 'package',
+        'miscellaneous': 'miscellaneous item'
     }
 
     index = 0
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{" and " if index == len(totals) - 1 else " "}{totals[category]} {wording_map[category]}{"," if index < len(totals) - 1 else "."}"
+            publication_breakdown += f"{" and " if index == len(totals) - 1 else " "}{totals[category]} {wording_map[category]}{"s" if totals[category] > 1 else ""}{"," if index < len(totals) - 1 else "."}"
         index += 1
 
     message.dynamic_template_data = {  
