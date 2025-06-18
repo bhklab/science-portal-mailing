@@ -33,18 +33,31 @@ async def email_director(pub: Publication = Body(...)):
 
     doi_encoding = urllp.quote(pub.doi, safe="~()*!.'")
 
+    publication_breakdown = "The publication consists of "
+
+    wording_map = {
+        'code': 'code repositories',
+        'data': 'datasets',
+        'containers': 'containers',
+        'trials': 'trials',
+        'results': 'results',
+        'protocols': 'protocols',
+        'packages': 'packages',
+        'miscellaneous': 'miscellaneous items'
+    }
+
+    index = 0
+    for category in totals:
+        if totals[category] > 0:
+            publication_breakdown += f"{" and " if index == len(totals) - 1 else " "}{totals[category]} {wording_map[category]}{"," if index < len(totals) - 1 else "."}"
+        index += 1
+
     message.dynamic_template_data = {  
-        'name_of_user': f"{first_name.capitalize()}, {last_name.capitalize()}",
+        'name_of_user': f"{first_name.capitalize()} {last_name.capitalize()}",
         'email_of_user': pub.submitter,
-        'code_total': totals["code"],
-        'dataset_total': totals["data"],
-        'container_total': totals["containers"],
-        'trial_total': totals["trials"],
-        'protocol_total': totals["protocols"],
-        'package_total': totals["packages"],
+        'publication_breakdown': publication_breakdown,
 
-        'link_to_publication': f"https://pmscience.ca/publication/{doi_encoding}",
-
+        'link_to_publication': f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
     }
 
     message.template_id = 'd-c684d53e767243d3be5481abd93b2510'
@@ -58,5 +71,5 @@ async def email_director(pub: Publication = Body(...)):
     except Exception as e:
         print(e)
 
-    return {"message": "Hello World"}
+    return {"message": "Completed scraping and sent out director email."}
 
