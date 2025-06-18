@@ -36,14 +36,14 @@ async def email_director(pub: Publication = Body(...)):
     publication_breakdown = "The publication consists of "
 
     wording_map = {
-        'code': 'code repositories',
-        'data': 'datasets',
-        'containers': 'containers',
-        'trials': 'trials',
-        'results': 'results',
-        'protocols': 'protocols',
-        'packages': 'packages',
-        'miscellaneous': 'miscellaneous items'
+        'code': 'code repositorie(s)',
+        'data': 'dataset(s)',
+        'containers': 'container(s)',
+        'trials': 'trial(s)',
+        'results': 'result(s)',
+        'protocols': 'protocol(s)',
+        'packages': 'package(s)',
+        'miscellaneous': 'miscellaneous item(s)'
     }
 
     index = 0
