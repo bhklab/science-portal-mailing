@@ -29,7 +29,7 @@ scraping_pub_collection = db[os.getenv("SCRAPING_COLLECTION")]
 async def scraping(pub: Publication = Body(...)):
     '''
         Cross ref and supplementary scrape for newly submitted publication
-        returns: boolean (true if success, false if unsuccessful)
+        returns: Publication object with all scraped data
     '''
 
     existing_doc = main_pub_collection.find_one({"doi": pub.doi})
@@ -59,15 +59,16 @@ async def scraping(pub: Publication = Body(...)):
             lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
             no_sandbox=True
         )
-
+        time.sleep(2)
         tab = await browser.get(f'https://doi.org/{pub.doi}')
-        time.sleep(1)
+        time.sleep(2)
         await tab.select('body') # waits for page to render first
-        body_text = await tab.get_content()
-
+        
         await tab.scroll_down(100)
         await tab.scroll_down(100)
         await tab.scroll_down(200)
+        
+        body_text = await tab.get_content()
 
         elements = await tab.select_all("a[href]")
         await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
