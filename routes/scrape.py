@@ -91,11 +91,14 @@ async def scraping(pub: Publication = Body(...)):
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
             if "https://" in match.group(1) or "http://" in match.group(1):
-                links.add(match.group(1).lower())
+                links.add(match.group(1))
 
-        
-    links.update(scrape_body(body_text))
-        
+    # Ensures lowsercase set to ensure we can test for duplicates without affecting casing of original
+    links_lower = {link.lower() for link in links}
+    for new_link in scrape_body(body_text):
+        if new_link.lower() not in links_lower:
+            links.add(new_link)
+
     classified_links = classify_all(links)
 
     publication.supplementary = classified_links
@@ -139,22 +142,24 @@ async def crossref_scrape(pub: Publication) -> Publication:
                     if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
                         author_string += "; "
                     for affil in author['affiliation']:
-                        affiliations.add(affil['name'])        
+                        affiliations.add(affil['name'])   
 
-                    pub.PMID = -1
-                    pub.date = data['message']['created']['date-time'][:10]
-                    pub.name = data['message']['title'][0]
-                    pub.journal = data['message'].get('container-title', [""])[0]
-                    pub.type = data['message'].get('type')
-                    pub.authors = author_string
-                    pub.filteredAuthors = ""
-                    pub.affiliations.extend(list(affiliations))
-                    pub.citations = data['message'].get('is-referenced-by-count', 0)
-                    pub.dateAdded = str(datetime.datetime.now())[0:10]
-                    pub.publisher = data['message']['publisher']
-                    pub.status = "published"
-                    pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
-                    pub.scraped = True
+                print(affiliations)     
+
+                pub.PMID = -1
+                pub.date = data['message']['created']['date-time'][:10]
+                pub.name = data['message']['title'][0]
+                pub.journal = data['message'].get('container-title', [""])[0]
+                pub.type = data['message'].get('type')
+                pub.authors = author_string
+                pub.filteredAuthors = ""
+                pub.affiliations.extend(list(affiliations))
+                pub.citations = data['message'].get('is-referenced-by-count', 0)
+                pub.dateAdded = str(datetime.datetime.now())[0:10]
+                pub.publisher = data['message']['publisher']
+                pub.status = "published"
+                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
+                pub.scraped = True
 
                 return pub
         else:

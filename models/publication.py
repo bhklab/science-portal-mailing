@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 class Publication(BaseModel):
     PMID: Optional[int] = -1
@@ -17,7 +17,7 @@ class Publication(BaseModel):
     status: str
     image: Optional[str] = None
     scraped: bool
-    fanout: Optional[dict[str, bool]] = None
+    fanout: Optional[dict[str, Union[bool, None]]] = None
     supplementary: Optional[dict[str, dict[str, list[str]]]] = None
     otherLinks: Optional[list[dict]] = None
     submitter: str   

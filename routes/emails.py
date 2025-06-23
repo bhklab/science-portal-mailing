@@ -19,7 +19,7 @@ wording_map = {
     'results': 'result',
     'protocols': 'protocol',
     'packages': 'package',
-    'miscellaneous': 'miscellaneous item'
+    'miscellaneous': 'unclassified resource'
 }
 
 @router.post("/director")
