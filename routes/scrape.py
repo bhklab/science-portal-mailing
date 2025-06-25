@@ -25,95 +25,11 @@ db = client[os.getenv("DATABASE")]
 main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 scraping_pub_collection = db[os.getenv("SCRAPING_COLLECTION")]
   
-@router.post("/publication")
-async def scraping(doi: str = Body(..., embed=True)):
-    '''
-        Cross ref and supplementary scrape for newly submitted publication
-        returns: boolean (true if success, false if unsuccessful)
-    '''
-    
-    existing_doc = main_pub_collection.find_one({"doi": doi})
-
-    if existing_doc:
-        print("DOI exists.")
-        return "DOI exists."
-    else:
-        print("DOI does not exist yet.")
-
-    publication =  await crossref_scrape(doi)
-
-    try:
-
-        display = None
-        browser = None
-
-        if os.getenv("LINUX") == "yes":
-            display = Display(visible=0, size=(1920, 1080))
-            display.start()
-
-        browser = await uc.start(
-            headless=False,
-            # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
-            # browser_executable_path="/path/to/some/other/browser",
-            # browser_args=['--some-browser-arg=true', '--some-other-option'],
-            lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
-            no_sandbox=True
-        )
-
-        tab = await browser.get(f'https://doi.org/{doi}')
-        await tab.select('body') # waits for page to render first
-
-        time.sleep(1)
-
-        body_text = await tab.get_content()
-
-        await tab.scroll_down(100)
-        await tab.scroll_down(100)
-        await tab.scroll_down(200)
-
-        elements = await tab.select_all("a[href]")
-        await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
-
-        await tab.close()
-        browser.stop()
-        
-        if display:
-            display.stop()
-
-    except Exception as e:
-        if browser:
-            browser.stop()
-        if display:
-            display.stop()
-        raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
-
-    links = set()
-    for ele in elements:
-        match = re.search(r'href="([^"]+)"', str(ele))
-        if match:
-            if "https://" in match.group(1) or "http://" in match.group(1):
-                links.add(match.group(1).lower())
-
-        
-    links.update(scrape_body(body_text))
-        
-    classified_links = classify_all(links)
-
-    publication.supplementary = classified_links
-
-
-    write_to_csv("output_data/output.csv", doi, classified_links)
-    write_to_json("output_data/raw_links.json", doi, links)
-
-    scraping_pub_collection.insert_one(publication.model_dump())
-
-    return publication
-
 @router.post("/publication/one")
 async def scraping(pub: Publication = Body(...)):
     '''
         Cross ref and supplementary scrape for newly submitted publication
-        returns: boolean (true if success, false if unsuccessful)
+        returns: Publication object with all scraped data
     '''
 
     existing_doc = main_pub_collection.find_one({"doi": pub.doi})
@@ -143,15 +59,16 @@ async def scraping(pub: Publication = Body(...)):
             lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
             no_sandbox=True
         )
-
+        time.sleep(2)
         tab = await browser.get(f'https://doi.org/{pub.doi}')
-        time.sleep(1)
+        time.sleep(2)
         await tab.select('body') # waits for page to render first
-        body_text = await tab.get_content()
-
+        
         await tab.scroll_down(100)
         await tab.scroll_down(100)
         await tab.scroll_down(200)
+        
+        body_text = await tab.get_content()
 
         elements = await tab.select_all("a[href]")
         await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
@@ -174,11 +91,14 @@ async def scraping(pub: Publication = Body(...)):
         match = re.search(r'href="([^"]+)"', str(ele))
         if match:
             if "https://" in match.group(1) or "http://" in match.group(1):
-                links.add(match.group(1).lower())
+                links.add(match.group(1))
 
-        
-    links.update(scrape_body(body_text))
-        
+    # Ensures lowsercase set to ensure we can test for duplicates without affecting casing of original
+    links_lower = {link.lower() for link in links}
+    for new_link in scrape_body(body_text):
+        if new_link.lower() not in links_lower:
+            links.add(new_link)
+
     classified_links = classify_all(links)
 
     publication.supplementary = classified_links
@@ -222,26 +142,23 @@ async def crossref_scrape(pub: Publication) -> Publication:
                     if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
                         author_string += "; "
                     for affil in author['affiliation']:
-                        affiliations.add(affil['name'])        
+                        affiliations.add(affil['name'])   
 
-                    pub.PMID = -1
-                    pub.date = data['message']['created']['date-time'][:10]
-                    pub.name = data['message']['title'][0]
-                    pub.journal = data['message'].get('container-title', [""])[0]
-                    pub.type = data['message'].get('type')
-                    pub.authors = author_string
-                    pub.filteredAuthors = ""
-                    pub.affiliations.extend(list(affiliations))
-                    pub.citations = data['message'].get('is-referenced-by-count', 0)
-                    pub.dateAdded = str(datetime.datetime.now())[0:10]
-                    pub.publisher = data['message']['publisher']
-                    pub.status = "published"
-                    pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
-                    pub.fanout = {
-                        "request": False,
-                        "completed": False
-                    }
-                    pub.scraped = True
+
+                pub.PMID = pub.pmid if (pub.pmid and (pub.pmid != "" or pub.pmid != -1)) else -1
+                pub.date = data['message']['created']['date-time'][:10]
+                pub.name = data['message']['title'][0]
+                pub.journal = data['message'].get('container-title', [""])[0]
+                pub.type = data['message'].get('type')
+                pub.authors = author_string
+                pub.filteredAuthors = ""
+                pub.affiliations.extend(list(affiliations))
+                pub.citations = data['message'].get('is-referenced-by-count', 0)
+                pub.dateAdded = str(datetime.datetime.now())[0:10]
+                pub.publisher = data['message']['publisher']
+                pub.status = "published"
+                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
+                pub.scraped = True
 
                 return pub
         else:

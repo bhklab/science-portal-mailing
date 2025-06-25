@@ -1,23 +1,23 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 class Publication(BaseModel):
     PMID: Optional[int] = -1
     doi: str
-    date: str
-    name: str
-    journal: str
-    type: str
-    authors: str
-    filteredAuthors: str
-    affiliations: list[str]
-    citations: int
-    dateAdded: str
-    publisher: str
-    status: str
+    date: str = None
+    name: str = None
+    journal: str = None
+    type: str = None
+    authors: str = None
+    filteredAuthors: str = None
+    affiliations: list[str] = None
+    citations: int = 0
+    dateAdded: str = None
+    publisher: str = None
+    status: str = None
     image: Optional[str] = None
-    scraped: bool
-    fanout: Optional[dict[str, bool]] = None
+    scraped: bool = None
+    fanout: Optional[dict[str, Union[bool, None]]] = None
     supplementary: Optional[dict[str, dict[str, list[str]]]] = None
     otherLinks: Optional[list[dict]] = None
-    submitter: str   
+    submitter: str = 'routine'

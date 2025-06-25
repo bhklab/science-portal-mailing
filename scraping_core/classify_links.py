@@ -5,11 +5,11 @@ from scraping_core.write_to_json import write_to_json
 SUPPLEMENTARY = {
     "code": ["github", "gitlab"],
     "data": [
-        "geo", "dbGap", "kaggle", "dryad", "empiar", "gigadb", "zenodo", "ega", "xlsx", "csv",
+        "geo", "dbGap", "kaggle", "dryad", "empiar", "gigaDb", "zenodo", "ega", "xlsx", "csv",
         "proteinDataBank", "dataverse", "openScienceFramework", "finngenGitbook", "gtexPortal",
         "ebiAcUk", "mendeley", "R"
     ],
-    "containers": ["codeocean", "colab"],
+    "containers": ["codeOcean", "colab"],
     "results": ["gsea", "figshare"],
     "trials": ["clinicalTrial", "euCTR", "vivli", "yoda"],
     "protocols": ["protocolsIO", "bioProtocol", "benchling", "labArchives"],
@@ -25,7 +25,7 @@ SUPPLEMENTARY_PATTERNS = {
     "kaggle": re.compile(r"https?://[^ ]*kaggle[^ ]*", re.IGNORECASE),
     "dryad": re.compile(r"https?://[^ ]*datadryad\.org/(?!($|stash/?$))[^ ]+|https?://[^ ]*doi\.org/10\.5061/dryad\.[^ ]+", re.IGNORECASE),
     "empiar": re.compile(r"https?://(?:www\.)?ebi\.ac\.uk/empiar/EMPIAR-\d+", re.IGNORECASE),
-    "gigadb": re.compile(r"https?://(?:www\.)?gigadb\.org/dataset/\d+", re.IGNORECASE),
+    "gigaDb": re.compile(r"https?://(?:www\.)?gigadb\.org/dataset/\d+", re.IGNORECASE),
     "zenodo": re.compile(r"https?://(?:www\.)?(zenodo\.org|doi\.org/10\.5281/zenodo\.\d+)", re.IGNORECASE),
     "ega": re.compile(r"https?://(?:www\.)?ega-archive\.org/(studies|datasets)/[\w\-]+", re.IGNORECASE),
     "xlsx": re.compile(r"\.xlsx($|\?)", re.IGNORECASE),
@@ -38,7 +38,7 @@ SUPPLEMENTARY_PATTERNS = {
     "ebiAcUk": re.compile(r"https?://[^ ]*ebi\.ac\.uk[^ ]*|ftp://[^ ]*sra\.ebi\.ac\.uk[^ ]*|https?://[^ ]*ena\.embl[^ ]*", re.IGNORECASE),
     "mendeley": re.compile(r"https?://(?:www\.)?mendeley\.com/catalogue/[\w\-]+/?", re.IGNORECASE),
     "R": re.compile(r"\.rds($|\?)", re.IGNORECASE),
-    "codeocean": re.compile(
+    "codeOcean": re.compile(
         r"https?://(?:www\.)?codeocean\.com/(algo\.html\?algorithmSlug=|capsule/)[\w\-/]+"
         r"|https?://(?:www\.)?doi\.org/10\.24433/CO\.\d+(?:\.v\d+)?", re.IGNORECASE
     ),
