@@ -14,9 +14,9 @@ class Publication(BaseModel):
     citations: int = 0
     dateAdded: str = None
     publisher: str = None
-    status: str = None
+    status: Optional[str] = None
     image: Optional[str] = None
-    scraped: bool = None
+    scraped: Optional[bool] = None
     fanout: Optional[dict[str, Union[bool, None]]] = None
     supplementary: Optional[dict[str, dict[str, list[str]]]] = None
     otherLinks: Optional[list[dict]] = None
