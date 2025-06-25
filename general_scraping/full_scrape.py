@@ -1,4 +1,4 @@
-# TO RUN: pixi run python -m general_scraping.full_scrape
+# TO RUN: pixi run python general_scraping/full_scrape.py
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -30,24 +30,27 @@ async def publication_scraping():
 	errors = []
 
 	for dict in dicts:
-		print(dict['doi'])
 		pubs.append(Publication(PMID=dict['PMID'], doi=dict['doi']))
 
 	for pub in pubs:
-		try:
-			print(pub.model_dump())
-			full_pub = requests.post(
-				f'http://localhost:8000/scrape/publication/one',
-				json=pub.model_dump(),
-				headers = {
-					'User-Agent': f'Python-requests',
-				}
-			)
-			print(full_pub)
-			main_pub_collection.insert_one(full_pub.model_dump())
-		except Exception as e:
-			errors.append(pub.doi)
-			# print(e)
+		if not main_pub_collection.find_one({"doi": pub.doi}):
+			try:
+				pub_dump = pub.model_dump()
+				r = requests.post(
+					'http://localhost:8000/scrape/publication/one',
+					json=pub_dump,
+					headers = {
+						'User-Agent': 'Python-requests'
+					}
+				)
+				print(r._content)
+				full_pub = r.json()
+				main_pub_collection.insert_one(full_pub)
+			except Exception as e:
+				errors.append({"doi": pub.doi, "error": e})
+				print(e)
+		else:
+			print(f"DOI already exists: {pub.doi}")
 
 	with open(f'{os.getcwd()}/general_scraping/errors/dois-of-errors.json', mode='w', encoding='utf-8') as f:
 		json.dump(errors, f, indent=2)

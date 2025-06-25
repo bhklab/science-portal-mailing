@@ -4,16 +4,16 @@ from typing import Optional, Union
 class Publication(BaseModel):
     PMID: Optional[int] = -1
     doi: str
-    date: str = None
-    name: str = None
-    journal: str = None
-    type: str = None
-    authors: str = None
-    filteredAuthors: str = None
-    affiliations: list[str] = None
-    citations: int = 0
-    dateAdded: str = None
-    publisher: str = None
+    date: Optional[str] = None
+    name: Optional[str] = None
+    journal: Optional[str] = None
+    type: Optional[str] = None
+    authors: Optional[str] = None
+    filteredAuthors: Optional[str] = None
+    affiliations: Optional[list[str]] = []
+    citations: Optional[int] = 0
+    dateAdded: Optional[str] = None
+    publisher: Optional[str] = None
     status: Optional[str] = None
     image: Optional[str] = None
     scraped: Optional[bool] = None

@@ -145,7 +145,7 @@ async def crossref_scrape(pub: Publication) -> Publication:
                         affiliations.add(affil['name'])   
 
 
-                pub.PMID = pub.pmid if (pub.pmid and (pub.pmid != "" or pub.pmid != -1)) else -1
+                pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
                 pub.date = data['message']['created']['date-time'][:10]
                 pub.name = data['message']['title'][0]
                 pub.journal = data['message'].get('container-title', [""])[0]
