@@ -30,7 +30,7 @@ async def publication_scraping():
 	errors = []
 
 	for dict in dicts:
-		pubs.append(Publication(PMID=dict['PMID'], doi=dict['doi']))
+		pubs.append(Publication(PMID=dict['PMID'], doi=dict['doi'], authors=dict['authors']))
 
 	for pub in pubs:
 		if not main_pub_collection.find_one({"doi": pub.doi}):
