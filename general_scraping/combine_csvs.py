@@ -25,6 +25,9 @@ df_selected = combined_df[selected_columns].rename(columns={
     'Filtered Affiliations': 'filteredAffiliations',
 })
 
+# Ensure PMID is a numeric value, replace NaNs or invalid values with -1, and convert to int
+df_selected['PMID'] = pd.to_numeric(df_selected['PMID'], errors='coerce').fillna(-1).astype(int)
+
 # Remove duplicate DOIs
 df_selected = df_selected.drop_duplicates(subset='doi', keep='first')
 
@@ -41,4 +44,4 @@ filtered_selected_df = df_selected[
 ]
 
 # Export the filtered results
-filtered_selected_df.to_csv('output_data/pubs-2022-to-2025-utf-8-2.csv', index=False)
+filtered_selected_df.to_csv('output_data/pubs-2022-to-2025-utf-8.csv', index=False)

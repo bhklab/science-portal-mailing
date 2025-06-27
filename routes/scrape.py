@@ -137,33 +137,34 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 affiliations = set()
 
                 # Iterate author list, utilize unidecode to remove special characters, add them to string
-                for i, author in enumerate(data['message']['author']):
-                    author_string += f"{unidecode(author.get('family', ''))}, {unidecode(author.get('given', ''))}"
-                    if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
-                        author_string += "; "
-                    for affil in author['affiliation']:
-                        affiliations.add(affil['name'])   
+                if (data['message'].get('author')):
+                    for i, author in enumerate(data['message']['author']):
+                        author_string += f"{unidecode(author.get('family', ''))}, {unidecode(author.get('given', ''))}"
+                        if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
+                            author_string += "; "
+                        for affil in author['affiliation']:
+                            affiliations.add(affil['name'])   
 
 
-                pub.PMID = pub.pmid if (pub.pmid and (pub.pmid != "" or pub.pmid != -1)) else -1
+                pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
                 pub.date = data['message']['created']['date-time'][:10]
                 pub.name = data['message']['title'][0]
-                pub.journal = data['message'].get('container-title', [""])[0]
+                pub.journal = data['message'].get('container-title')[0] if data['message'].get('container-title') else data['message'].get('institution')[0]['name']
                 pub.type = data['message'].get('type')
-                pub.authors = author_string
+                pub.authors = author_string if author_string != "" else pub.authors
                 pub.filteredAuthors = ""
                 pub.affiliations.extend(list(affiliations))
                 pub.citations = data['message'].get('is-referenced-by-count', 0)
                 pub.dateAdded = str(datetime.datetime.now())[0:10]
-                pub.publisher = data['message']['publisher']
+                pub.publisher = data['message'].get('publisher', '')
                 pub.status = "published"
-                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
+                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
                 pub.scraped = True
 
                 return pub
         else:
             raise HTTPException(status_code=404)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"DOI does not exist in crossref {e}")
+        raise HTTPException(status_code=404, detail=f"Crossref Error: {e}")
 
 
