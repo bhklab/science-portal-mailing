@@ -9,11 +9,11 @@ EGA_PATTERN = re.compile(r"\b(EGAS\d+)\b", re.IGNORECASE)
 
 # DOI Patterns
 DOI_PATTERNS = {
-    "zenodo": (re.compile(r"10\.5281/zenodo\.(\d+)", re.IGNORECASE), lambda m: f"https://zenodo.org/records/{m.group(1)}"),
-    "dryad": (re.compile(r"10\.5061/dryad\.(\w+)", re.IGNORECASE), lambda m: f"https://datadryad.org/stash/dataset/doi:10.5061/dryad.{m.group(1)}"),
+    "zenodo": (re.compile(r"10\.5281/zenodo\.(\d+)", re.IGNORECASE), lambda m: f"https://doi.org/10.5281/zenodo.{m.group(1)}"),
+    "dryad": (re.compile(r"10\.5061/dryad\.(\w+)", re.IGNORECASE), lambda m: f"https://doi.org/10.5061/dryad.{m.group(1)}"),
     "figshare": (re.compile(r"10\.6084/m9\.figshare\.(\d+)", re.IGNORECASE), lambda m: f"https://figshare.com/articles/online_resource/{m.group(1)}"),
-    "codeOcean": (re.compile(r"10\.24433/CO\.(\d+)", re.IGNORECASE), lambda m: f"https://codeocean.com/capsule/{m.group(1)}"),
-    "dataverse": (re.compile(r"10\.7910/DVN/(\w+)", re.IGNORECASE), lambda m: f"https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/{m.group(1)}"),
+    "codeOcean": (re.compile(r"10\.24433/CO\.(\d+)", re.IGNORECASE), lambda m: f"https://doi.org/10.24433/CO.{m.group(1)}.v1"),
+    "dataverse": (re.compile(r"10\.7910/DVN/(\w+)", re.IGNORECASE), lambda m: f"https://doi.org/10.7910/DVN/{m.group(1)}"),
     "empiar": (re.compile(r"10\.6019/EMPIAR-(\d+)", re.IGNORECASE), lambda m: f"https://www.ebi.ac.uk/empiar/EMPIAR-{m.group(1)}"),
     "gigaDb": (re.compile(r"10\.5524/(\w+)", re.IGNORECASE), lambda m: f"https://gigadb.org/dataset/{m.group(1)}"),
     "mendeley": (re.compile(r"10\.17632/([\w]+)", re.IGNORECASE), lambda m: f"https://data.mendeley.com/datasets/{m.group(1)}/1"),
@@ -33,7 +33,7 @@ def scrape_body(body_text: str):
 
     # ClinicalTrials
     for nct_id in NCT_MENTION_PATTERN.findall(body_text):
-        links.add(f"https://clinicaltrials.gov/ct2/show/NCT{nct_id}")
+        links.add(f"https://www.clinicaltrials.gov/ct2/show/NCT{nct_id}")
 
     # dbGaP
     for phs_id in DB_GAP_PATTERN.findall(body_text):

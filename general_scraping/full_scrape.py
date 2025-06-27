@@ -43,9 +43,12 @@ async def publication_scraping():
 						'User-Agent': 'Python-requests'
 					}
 				)
-				print(r._content)
-				full_pub = r.json()
-				main_pub_collection.insert_one(full_pub)
+				if r.status_code == 200:
+					print(r._content)
+					full_pub = r.json()
+					main_pub_collection.insert_one(full_pub)
+				else: 
+					errors.append({"doi": pub.doi, "error": r.json()})
 			except Exception as e:
 				errors.append({"doi": pub.doi, "error": e})
 				print(e)
