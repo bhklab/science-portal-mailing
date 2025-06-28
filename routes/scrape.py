@@ -148,8 +148,8 @@ async def crossref_scrape(pub: Publication) -> Publication:
 
                 pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
                 pub.date = data['message']['created']['date-time'][:10]
-                pub.name = data['message']['title'][0]
-                pub.journal = data['message'].get('container-title')[0] if data['message'].get('container-title') else data['message'].get('institution')[0]['name']
+                pub.name = data['message']['title'][0].replace('&amp;', '&')
+                pub.journal = data['message'].get('container-title')[0].replace('&amp;', '&') if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].replace('&amp;', '&')
                 pub.type = data['message'].get('type')
                 pub.authors = author_string if author_string != "" else pub.authors
                 pub.filteredAuthors = ""
@@ -158,7 +158,7 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 pub.dateAdded = str(datetime.datetime.now())[0:10]
                 pub.publisher = data['message'].get('publisher', '')
                 pub.status = "published"
-                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '') + '.jpg'
+                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg'
                 pub.scraped = True
 
                 return pub
