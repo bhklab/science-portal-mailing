@@ -29,8 +29,9 @@ filtered_selected_df = df_selected[
         df_selected['affiliations'].str.contains('PMC', case=False, na=False) |
         df_selected['filteredAffiliations'].str.contains('Princess Margaret', case=False, na=False) |
         df_selected['filteredAffiliations'].str.contains('PMC', case=False, na=False)
-    )
+    ) & 
+	(df_selected['year'].str.contains('2022|2021|2020|2019|2018', case=False, na=False))
 ]
 
 # Export the filtered results
-filtered_selected_df.to_csv('output_data/pubs-2022-to-2025-utf-8.csv', index=False)
+filtered_selected_df.to_csv('output_data/pubs-pre-2022-utf-8.csv', index=False)
