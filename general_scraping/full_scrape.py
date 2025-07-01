@@ -19,7 +19,7 @@ db = client[os.getenv("DATABASE")]
 main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 
 async def publication_scraping():
-	df = pd.read_csv(f'{os.getcwd()}/general_scraping/output_data/pubs-2022-to-2025-utf-8.csv', encoding='utf-8')
+	df = pd.read_csv(f'{os.getcwd()}/general_scraping/output_data/pubs-pre-2022-utf-8.csv', encoding='utf-8')
 
 	dicts = df.to_dict(orient='records')
 
@@ -30,7 +30,7 @@ async def publication_scraping():
 	errors = []
 
 	for dict in dicts:
-		pubs.append(Publication(PMID=dict['PMID'], doi=dict['doi'], authors=dict['authors']))
+		pubs.append(Publication(PMID=dict['PMID'], doi=dict['doi'], authors=dict['authors'], type=dict['type']))
 
 	for pub in pubs:
 		if not main_pub_collection.find_one({"doi": pub.doi}):
