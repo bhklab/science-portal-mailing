@@ -112,7 +112,7 @@ async def email_fanout(pub: Publication = Body(...)):
 
     message.dynamic_template_data = {  
         'publication_title': pub.name,
-        'main_authors': f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}" if authors > 5 else pub.authors,
+        'main_authors': f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}" if len(authors) > 5 else pub.authors,
         'publication_journal': pub.journal,
         'publication_breakdown': publication_breakdown,
 
