@@ -47,9 +47,11 @@ async def email_director(pub: Publication = Body(...)):
     publication_breakdown = "The publication consists of "
 
     index = 0
+    total_categories = 0
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{" and " if index == len(totals) - 1 else " "}{totals[category]} {wording_map[category]}{"s" if totals[category] > 1 else ""}{"," if index < len(totals) - 1 else "."}"
+            publication_breakdown += f"{" and " if index == len(totals) - 1 and total_categories > 0 else " "}{totals[category]} {wording_map[category]}{"s" if totals[category] > 1 else ""}{"," if index < len(totals) - 1 else "."}"
+            total_categories += 1
         index += 1
 
     message.dynamic_template_data = {  
@@ -106,9 +108,12 @@ async def email_fanout(pub: Publication = Body(...)):
             total_categories += 1
         index += 1
 
+    authors = pub.authors.split(";")
+
     message.dynamic_template_data = {  
         'publication_title': pub.name,
-        'name_of_submitter': f"{first_name.capitalize()} {last_name.capitalize()}",
+        'main_authors': f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}" if authors > 5 else pub.authors,
+        'publication_journal': pub.journal,
         'publication_breakdown': publication_breakdown,
 
         'link_to_publication': f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
