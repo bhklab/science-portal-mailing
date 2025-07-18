@@ -1,6 +1,7 @@
 import csv
 from scraping_core.classify_links import SUPPLEMENTARY
 
+# Write publication result to csv to show all obtained link results
 def write_to_csv(filepath, doi, classified_links):
     try:
         with open(filepath, mode='r', newline='', encoding='utf-8') as f:
