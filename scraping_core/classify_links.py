@@ -72,6 +72,7 @@ DUD_PATTERNS = ["issues", "releases", "pull", "linkedin", "scopus", "adsabs", "f
 def is_dud(link: str) -> bool:
     return any(dud in link.lower() for dud in DUD_PATTERNS)
 
+# Helper function to remove anything after link regex endings below to remove the potential expiry codes
 def strip_query_params(link: str) -> str:
     match = re.search(r'(?i)(\.pdf|\.xlsx|\.csv|\.rds|\.docx|\.zip)', link)
     if match:
@@ -79,6 +80,15 @@ def strip_query_params(link: str) -> str:
         return link[:link.find(ext) + len(ext)]
     return link
 
+#Verify a link doesn't contain https:// more than once, if so, use the last occurence
+def verify_single_https(link: str) -> str:
+    matches = re.findall(r'https://[^https]+', link)
+    if matches:
+        return matches[len(matches) - 1]
+    else:
+        return link
+
+# Helper function to clean and categorize a link 
 def classify_link(link: str):
     cleaned_link = strip_query_params(link)
     for subcat, pattern in SUPPLEMENTARY_PATTERNS.items():
@@ -88,6 +98,7 @@ def classify_link(link: str):
                     return group, subcat
     return None, None
 
+# Create supplementary object (resources object) for the publication going into the database
 def classify_all(links: set[str]):
     result = {group: {subcat: [] for subcat in SUPPLEMENTARY[group]} for group in SUPPLEMENTARY}
     
