@@ -30,3 +30,22 @@ for pub in pubs:
             {"_id": pub["_id"]},
             {"$set": updated_fields}
         )
+
+query = {
+    "name": {"$regex": "<i>"}
+}
+
+pubs = pub_collection.find(query)
+
+for pub in pubs:
+    updated_fields = {}
+
+    if pub.get("name"):
+        if "<i>" in pub["name"]:
+            updated_fields["name"] = pub["name"].replace("<i>", "").replace("</i>", "")
+
+    if updated_fields:
+        pub_collection.update_one(
+            {"_id": pub["_id"]},
+            {"$set": updated_fields}
+        )
