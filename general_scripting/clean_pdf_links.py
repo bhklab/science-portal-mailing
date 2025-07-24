@@ -1,6 +1,7 @@
 import pymongo
 import os
 from dotenv import load_dotenv
+import re
 
 load_dotenv(override=True)
 
@@ -49,3 +50,23 @@ for pub in pubs:
             {"_id": pub["_id"]},
             {"$set": updated_fields}
         )
+
+pubs = pub_collection.find(query)
+
+for pub in pubs:
+    updated_fields = {}
+
+    for sect in pub["supplementary"]:
+        for sub in sect:
+            if len(sub) > 0:
+                for link in sub:
+                    matches = re.findall(r'https://[^https]+', link)
+                    if matches:
+                        link = matches[len(matches) - 1]
+
+    if updated_fields:
+        pub_collection.update_one(
+            {"_id": pub["_id"]},
+            {"$set": updated_fields}
+        )
+
