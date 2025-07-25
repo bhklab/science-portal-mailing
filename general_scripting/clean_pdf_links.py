@@ -2,6 +2,7 @@ import pymongo
 import os
 from dotenv import load_dotenv
 import re
+from urllib.parse import urlparse, parse_qs
 
 load_dotenv(override=True)
 
@@ -51,22 +52,53 @@ for pub in pubs:
             {"$set": updated_fields}
         )
 
-pubs = pub_collection.find(query)
+pubs = pub_collection.find()
+
+changed_count = 0
 
 for pub in pubs:
     updated_fields = {}
+    original_supp = pub.get("supplementary", {})
+    updated_supp = {}
+    modified = False
 
-    for sect in pub["supplementary"]:
-        for sub in sect:
-            if len(sub) > 0:
-                for link in sub:
-                    matches = re.findall(r'https://[^https]+', link)
-                    if matches:
-                        link = matches[len(matches) - 1]
+    for category, subcategories in original_supp.items():
+        updated_supp[category] = {}
+        for subcat, links in subcategories.items():
+            updated_links = []
+            for link in links:
+                if isinstance(link, str):
+                    cleaned_link = link  # default
+                    original_link = link
 
-    if updated_fields:
+                    # Handle scholar/google redirects
+                    if "url=" in link:
+                        parsed = urlparse(link)
+                        qs = parse_qs(parsed.query)
+                        if "url" in qs:
+                            cleaned_link = qs["url"][0]
+
+                    # Fallback: if multiple https:// present
+                    else:
+                        matches = re.findall(r'https://[^\s"\']+', link)
+                        if len(matches) > 1:
+                            cleaned_link = matches[-1]
+
+                    if cleaned_link != original_link:
+                        print(f"Updated: {original_link} --> {cleaned_link}")
+                        changed_count += 1
+                        modified = True
+
+                    updated_links.append(cleaned_link)
+                else:
+                    updated_links.append(link)
+            updated_supp[category][subcat] = updated_links
+
+    if modified:
+        updated_fields["supplementary"] = updated_supp
         pub_collection.update_one(
             {"_id": pub["_id"]},
             {"$set": updated_fields}
         )
 
+print(f"\nTotal links changed: {changed_count}")
