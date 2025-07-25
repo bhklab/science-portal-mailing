@@ -6,6 +6,7 @@ import requests
 from dotenv import load_dotenv
 import pymongo
 import datetime
+import asyncio
 from unidecode import unidecode
 import nodriver as uc
 from pyvirtualdisplay import Display
@@ -14,6 +15,7 @@ from scraping_core.classify_links import classify_all
 from scraping_core.write_to_csv import write_to_csv
 from scraping_core.write_to_json import write_to_json
 from models.publication import Publication
+
 
 
 load_dotenv(override=True)
@@ -59,9 +61,9 @@ async def scraping(pub: Publication = Body(...)):
             lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
             no_sandbox=True
         )
-        time.sleep(2)
+        await asyncio.sleep(1)
         tab = await browser.get(f'https://doi.org/{pub.doi}')
-        time.sleep(2)
+        await asyncio.sleep(2)
         await tab.select('body') # waits for page to render first
         
         await tab.scroll_down(100)

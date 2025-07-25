@@ -82,11 +82,10 @@ def strip_query_params(link: str) -> str:
 
 #Verify a link doesn't contain https:// more than once, if so, use the last occurence
 def verify_single_https(link: str) -> str:
-    matches = re.findall(r'https://[^https]+', link)
+    matches = re.findall(r'https://[^\s,\'"]+', link)
     if matches:
-        return matches[len(matches) - 1]
-    else:
-        return link
+        return matches[-1]
+    return link
 
 # Helper function to clean and categorize a link 
 def classify_link(link: str):
