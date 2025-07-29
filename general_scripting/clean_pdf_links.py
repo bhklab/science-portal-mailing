@@ -10,6 +10,7 @@ client = pymongo.MongoClient(os.getenv("SP_DATABASE_STRING"))
 db = client[os.getenv("DATABASE")]
 pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 
+# Clean journal and image fields from &amp; and replace them with &
 query = {
     "journal": { "$regex": "&amp;" }
 }
@@ -33,6 +34,7 @@ for pub in pubs:
             {"$set": updated_fields}
         )
 
+# Clean name fields of <i> and </i> and removing them 
 query = {
     "name": {"$regex": "<i>"}
 }
