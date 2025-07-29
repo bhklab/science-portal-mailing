@@ -54,6 +54,7 @@ for pub in pubs:
             {"$set": updated_fields}
         )
 
+# Clean supplementary field of extra https if more than one exist
 pubs = pub_collection.find()
 
 changed_count = 0

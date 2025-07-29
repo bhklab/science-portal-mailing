@@ -58,7 +58,7 @@ async def scraping(pub: Publication = Body(...)):
             # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
             # browser_executable_path="/path/to/some/other/browser",
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
-            lang="en-US",   # this could set iso-language-code in navigator, not recommended to change
+            lang="en-US",   # this could set iso-language-code in navigator, it was not recommended to change according to docs
             no_sandbox=True
         )
         await asyncio.sleep(1)
