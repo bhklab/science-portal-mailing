@@ -1,6 +1,7 @@
 """
-Description: This script connects to a MongoDB database and cleans up publication names by removing <xyz...> tags (modified clean_pdf_links for it to work with names)
-Date: 2025-08-01
+Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list. (modified clean_pub_names for it to work with authors)
+Total authors_fields changed: 3885
+Date: 2025-07-31
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
 """
 #import all necessary libraries
@@ -17,27 +18,26 @@ client = pymongo.MongoClient(os.getenv("SP_DATABASE_STRING"))
 db = client[os.getenv("DATABASE")]
 pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 
-# Find all publications with <.*?> tags in the name field including <scp>, </scp>, <sup>, </sup>, <sub>, </sub>
+# Find all publications where any author name contains a period
 query = {
-    "name": {"$regex": "<.*?>"}
+    "authors": {"$elemMatch": {"$regex": "\\."}}
 }
 pubs = pub_collection.find(query)
 
-#count of names changed before cleaning
+#keep count of authors amount changed
 changed_count = 0
 
-# Iterate through each publication and clean the name field
+# Iterate through each publication and clean the authors field
 for pub in pubs:
-    original_name = pub.get("name", "")
-    if original_name:
-        # Remove all tags like <.*?> (xyz...), <scp>, </scp>, <sup>, </sup>, <sub>, </sub> re.sub allows for more complex patterns such as non specific patterns
-        cleaned_name = re.sub(r"<.*?>", "", original_name)
-        if cleaned_name != original_name:
+    authors_list = pub.get("authors", [])
+    
+    if isinstance(authors_list, list):
+        updated_authors = [name.replace(".", "") for name in authors_list]
+        if updated_authors != authors_list:
             pub_collection.update_one(
                 {"_id": pub["_id"]},
-                {"$set": {"name": cleaned_name}}
+                {"$set": {"authors": updated_authors}}
             )
             changed_count += 1
-
-# Print out the total number of names changed
-print(f"\nTotal names changed: {changed_count}")
+#print out the total number of authors fields changed
+print(f"\nTotal authors_fields changed: {changed_count}")
