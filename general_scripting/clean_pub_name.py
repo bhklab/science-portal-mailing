@@ -3,7 +3,7 @@ Description: This script connects to a MongoDB database and cleans up publicatio
 Date: 2025-08-01
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
 """
-#import all necessary libraries
+# import necessary libraries
 import pymongo
 import os
 from dotenv import load_dotenv
