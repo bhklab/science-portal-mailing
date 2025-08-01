@@ -1,6 +1,6 @@
 """
 Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list. (modified clean_pub_names for it to work with authors)
-Total authors_fields changed: 3885
+Total authors_fields changed during test: 3885
 Date: 2025-07-31
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
 """
@@ -30,7 +30,6 @@ changed_count = 0
 # Iterate through each publication and clean the authors field
 for pub in pubs:
     authors_list = pub.get("authors", [])
-    
     if isinstance(authors_list, list):
         updated_authors = [name.replace(".", "") for name in authors_list]
         if updated_authors != authors_list:
