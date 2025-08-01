@@ -1,5 +1,5 @@
 """
-Description: This script connects to a MongoDB database and cleans up publication names by removing <xyz> tags (modified clean_pdf_links for it to work with names)
+Description: This script connects to a MongoDB database and cleans up publication names by removing <xyz...> tags (modified clean_pdf_links for it to work with names)
 Date: 2025-08-01
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
 """
