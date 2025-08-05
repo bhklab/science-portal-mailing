@@ -1,5 +1,5 @@
 """
-Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list. (modified clean_pub_names for it to work with authors)
+Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list when it is befor ";" ex: ".;" . (modified clean_pub_names for it to work with authors)
 Total authors_fields changed during test: 3885
 Date: 2025-08-05
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
