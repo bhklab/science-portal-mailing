@@ -1,5 +1,5 @@
 """
-Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list when it is befor ";" ex: ".;" . (modified clean_pub_names for it to work with authors)
+Description: This script connects to a MongoDB database and cleans up authors field by removing "." from authors list when it is before ";" ex: ".;" . (modified clean_pub_names for it to work with authors)
 Total authors_fields changed during test: 3885
 Date: 2025-08-05
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
@@ -24,15 +24,15 @@ pubs = pub_collection.find()
 changed_count = 0
 
 # Iterate through each publication
-for pub in pubs():
-    authors_str = pub.get("authors", "")
-    if isinstance(authors_str, str) and ".;" in authors_str:
-        updated_authors_str = authors_str.replace(".;", ";")
-        pub_collection.update_one(
-            {"_id": pub["_id"]},
-            {"$set": {"authors": updated_authors_str}}
-        )
-        changed_count += 1
+for pub in pubs:
+    if pub.get("authors"):
+        if ".;" in pub.get("authors"):
+            updated_authors_str = pub.get("authors").replace(".;", ";")
+            pub_collection.update_one(
+                {"_id": pub["_id"]},
+                {"$set": {"authors": updated_authors_str}}
+            )
+            changed_count += 1
+            print(f"changed: {changed_count}")
 
-# Print the total number of changed documents
 print(f"\nTotal authors_fields changed: {changed_count}")
