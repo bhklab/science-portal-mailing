@@ -32,7 +32,7 @@ for pub in pubs:
             {"_id": pub["_id"]},
             {"$set": {"dateAdded": date_obj}}
         )
-        # increases changed count
+        #increases changed count
         changed_count += 1
 
 #print total number of updated documents
