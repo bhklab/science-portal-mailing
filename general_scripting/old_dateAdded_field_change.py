@@ -1,6 +1,7 @@
 """
 Description: This script connects to a MongoDB database and updates the `dateAdded` field in publications to ensure it is stored as a datetime object instead of a string. 2025-06-26T00:00:00.000+00:00 year-month-dayThour:minute:second.millisecond+ offset from UTC timezone.
 Author: Zéas Lupien (bhklab.zeaslupien@gmail.com, zaslup@gmail.com)
+Date: 2025-08-07
 """
 #import all necessary libraries
 from pymongo import MongoClient
