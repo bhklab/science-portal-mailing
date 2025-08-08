@@ -5,7 +5,8 @@ import re
 import requests
 from dotenv import load_dotenv
 import pymongo
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import asyncio
 from unidecode import unidecode
 import nodriver as uc
@@ -156,8 +157,8 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 pub.authors = author_string if author_string != "" else pub.authors
                 pub.filteredAuthors = ""
                 pub.affiliations.extend(list(affiliations))
-                pub.citations = data['message'].get('is-referenced-by-count', 0)
-                pub.dateAdded = datetime.datetime.now()
+                pub.citations = data['message'].get('is-referenced-by-count', 0)             
+                pub.dateAdded = datetime.now(ZoneInfo("UTC"))
                 pub.publisher = data['message'].get('publisher', '')
                 pub.status = "published"
                 pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg'
