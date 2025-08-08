@@ -148,6 +148,8 @@ async def crossref_scrape(pub: Publication) -> Publication:
                         for affil in author['affiliation']:
                             affiliations.add(affil['name'])   
 
+                    # Clean up any formatting issues
+                    author_string = author_string.replace('.;', ';')
 
                 pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
                 pub.date = data['message']['created']['date-time'][:10]              
