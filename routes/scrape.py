@@ -157,7 +157,7 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 pub.filteredAuthors = ""
                 pub.affiliations.extend(list(affiliations))
                 pub.citations = data['message'].get('is-referenced-by-count', 0)
-                pub.dateAdded = str(datetime.datetime.now())[0:10]
+                pub.dateAdded = datetime.datetime.now()
                 pub.publisher = data['message'].get('publisher', '')
                 pub.status = "published"
                 pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg'
