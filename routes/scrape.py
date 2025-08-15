@@ -5,7 +5,8 @@ import re
 import requests
 from dotenv import load_dotenv
 import pymongo
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import asyncio
 from unidecode import unidecode
 import nodriver as uc
@@ -147,17 +148,19 @@ async def crossref_scrape(pub: Publication) -> Publication:
                         for affil in author['affiliation']:
                             affiliations.add(affil['name'])   
 
+                    # Clean up authors field of unnecessary . when next to ;
+                    author_string = author_string.replace('.;', ';')
 
                 pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
-                pub.date = data['message']['created']['date-time'][:10]
-                pub.name = data['message']['title'][0].replace('&amp;', '&').replace("<i>", "").replace("</i>", "")
+                pub.date = data['message']['created']['date-time'][:10]   
+                pub.name = re.sub(r"\s{2,}", " ", re.sub(r"<.*?>", "", data['message']['title'][0].replace('&amp;', '&')))           
                 pub.journal = data['message'].get('container-title')[0].replace('&amp;', '&').replace("<i>", "").replace("</i>", "") if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].replace('&amp;', '&').replace("<i>", "").replace("</i>", "")
                 pub.type = data['message'].get('type')
                 pub.authors = author_string if author_string != "" else pub.authors
                 pub.filteredAuthors = ""
                 pub.affiliations.extend(list(affiliations))
-                pub.citations = data['message'].get('is-referenced-by-count', 0)
-                pub.dateAdded = str(datetime.datetime.now())[0:10]
+                pub.citations = data['message'].get('is-referenced-by-count', 0)             
+                pub.dateAdded = datetime.now(ZoneInfo("UTC"))
                 pub.publisher = data['message'].get('publisher', '')
                 pub.status = "published"
                 pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg'
