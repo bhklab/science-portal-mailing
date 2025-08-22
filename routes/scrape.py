@@ -153,7 +153,7 @@ async def crossref_scrape(pub: Publication) -> Publication:
 
                 pub.PMID = pub.PMID if (pub.PMID and (pub.PMID != "" or pub.PMID != -1)) else -1
                 pub.date = data['message']['created']['date-time'][:10]   
-                pub.name = re.sub(r"\s{2,}", " ", re.sub(r"<.*?>", "", data['message']['title'][0].replace('&amp;', '&')))           
+                pub.name = re.sub(r"\s{2,}", " ", re.sub(r"<.*?>", "", re.sub(r"&lt;.*?&gt;","", data['message']['title'][0].replace('&amp;', '&'))))          
                 pub.journal = data['message'].get('container-title')[0].replace('&amp;', '&').replace("<i>", "").replace("</i>", "") if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].replace('&amp;', '&').replace("<i>", "").replace("</i>", "")
                 pub.type = data['message'].get('type')
                 pub.authors = author_string if author_string != "" else pub.authors

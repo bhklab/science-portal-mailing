@@ -3,18 +3,18 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 from scraping_core.write_to_json import write_to_json
 
 SUPPLEMENTARY = {
-    "code": ["github", "gitlab"],
+    "code": ["github", "gitlab", "bitbucket"],
     "data": [
         "geo", "dbGap", "kaggle", "dryad", "empiar", "gigaDb", "zenodo", "ega", "xlsx", "csv",
         "proteinDataBank", "dataverse", "openScienceFramework", "finngenGitbook", "gtexPortal",
-        "ebiAcUk", "mendeley", "R"
+        "ebiAcUk", "mendeley", "R", "cellosaurus", "xls",
     ],
     "containers": ["codeOcean", "colab"],
     "results": ["gsea", "figshare"],
     "trials": ["clinicalTrial", "euCTR", "vivli", "yoda"],
     "protocols": ["protocolsIO", "bioProtocol", "benchling", "labArchives"],
     "packages": ["bioconductor", "pypi", "CRAN"],
-    "miscellaneous": ["IEEE", "pdf", "docx", "zip"]
+    "miscellaneous": ["IEEE", "pdf", "docx", "zip","ppt", "jpg", "png"],
 }
 
 SUPPLEMENTARY_PATTERNS = {
@@ -64,7 +64,13 @@ SUPPLEMENTARY_PATTERNS = {
         re.IGNORECASE
     ),
     "benchling": re.compile(r"https?://(?:www\.)?benchling\.com/(protocols|s)/[^\s]+", re.IGNORECASE),
-    "labArchives": re.compile(r"https?://(?:www\.)?mynotebook\.labarchives\.com/.+", re.IGNORECASE)
+    "labArchives": re.compile(r"https?://(?:www\.)?mynotebook\.labarchives\.com/.+", re.IGNORECASE),
+    "cellosaurus": re.compile(r"https?://(?:(?:www\.)?cellosaurus\.org/|web\.expasy\.org/cellosaurus/).+", re.IGNORECASE),
+    "bitbucket": re.compile(r"https?://(?:www\.)?bitbucket\.org/.+", re.IGNORECASE),
+    "xls": re.compile(r"https?://.+\.xls(?:\?.+)?", re.IGNORECASE),
+    "ppt": re.compile(r"https?://.+\.ppt(?:\?.+)?", re.IGNORECASE),
+    "jpg": re.compile(r"https?://.+\.jpg(?:\?.+)?", re.IGNORECASE),
+    "png": re.compile(r"https?://.+\.png(?:\?.+)?", re.IGNORECASE),
 }
 
 DUD_PATTERNS = ["issues", "releases", "pull", "linkedin", "scopus", "adsabs", "faq", "enquiries-about-studies-not-listed-on-the-vivli-platform", "ourmember"]
