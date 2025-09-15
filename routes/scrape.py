@@ -72,10 +72,9 @@ async def scraping(pub: Publication = Body(...)):
         await tab.scroll_down(200)
 
         body_text = await tab.get_content()
-
         elements = await tab.select_all("a[href]")
-        await tab.save_screenshot(os.getcwd() + "/screenshots/test.jpeg", "jpeg")
 
+        await tab.save_screenshot(os.getcwd() + "/screenshots/test.jpeg", "jpeg")
         await tab.close()
         browser.stop()
 
@@ -98,7 +97,11 @@ async def scraping(pub: Publication = Body(...)):
             if "https://" in match.group(1) or "http://" in match.group(1):
                 links.add(match.group(1))
 
-    # Ensures lowsercase set to ensure we can test for duplicates without affecting casing of original
+    raw_body_links = re.findall(r"https?://[^\s\"'<>()]+", body_text)
+    cleaned_body_links = {link.rstrip(".,;:!?)") for link in raw_body_links}
+    links.update(cleaned_body_links)
+
+    # Ensures lowercase set to ensure we can test for duplicates without affecting casing of original
     links_lower = {link.lower() for link in links}
     for new_link in scrape_body(body_text):
         if new_link.lower() not in links_lower:
