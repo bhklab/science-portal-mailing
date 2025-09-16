@@ -5,9 +5,13 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 from models.publication import Publication
-
+import pymongo
 
 load_dotenv(override=True)
+
+client = pymongo.MongoClient(os.getenv("SP_DATABASE_STRING"))
+db = client[os.getenv("DATABASE")]
+authors_collection = db[os.getenv("AUTHOR_COLLECTION")]
 
 router = APIRouter(prefix="/email")  # Adding email part of route
 
@@ -66,12 +70,9 @@ async def email_director(pub: Publication = Body(...)):
 
     try:
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
+        await sg.send(message)
     except Exception as e:
-        print(e)
+        HTTPException(status_code=500, detail=f"Error sending director email {str(e)}")
 
     return {"message": "Completed scraping and sent out director email."}
 
@@ -84,10 +85,6 @@ async def email_fanout(pub: Publication = Body(...)):
         subject="Sendgrid Email",
         html_content="<strong>Publication Approval</strong>",
     )
-
-    # split_email = pub.submitter.split(".")
-    # first_name = split_email[0]
-    # last_name = split_email[1].split("@")[0]
 
     totals = dict()
 
@@ -110,12 +107,15 @@ async def email_fanout(pub: Publication = Body(...)):
 
     authors = pub.authors.split(";")
 
+    submitter = pub.submitter.split(".")  # To extract first and last name
+
     message.dynamic_template_data = {
+        "main_author": f"{submitter[1].split('@')[0].capitalize()}, {submitter[0].capitalize()}",
         "publication_title": pub.name,
-        "main_authors": f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}"
+        "publication_journal": pub.journal,
+        "other_authors": f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}"
         if len(authors) > 5
         else pub.authors,
-        "publication_journal": pub.journal,
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
     }
@@ -124,9 +124,6 @@ async def email_fanout(pub: Publication = Body(...)):
 
     try:
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
+        await sg.send(message)
     except Exception as e:
-        print(e)
+        HTTPException(status_code=500, detail=f"Error sending fanout email {str(e)}")
