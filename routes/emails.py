@@ -42,6 +42,7 @@ async def email_director(pub: Publication = Body(...)):
 
     totals = dict()
 
+    # Count total links in each supplementary category
     for category in pub.supplementary:
         totals[category] = 0
         for subcategory in pub.supplementary[category]:
@@ -55,7 +56,7 @@ async def email_director(pub: Publication = Body(...)):
     total_categories = 0
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{',' if index == len(totals) - 1 else '.'}"
+            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{'.' if index == len(totals) - 1 else ','}"
             total_categories += 1
         index += 1
 
@@ -88,6 +89,7 @@ async def email_fanout(pub: Publication = Body(...)):
 
     totals = dict()
 
+    # Count total links in each supplementary category
     for category in pub.supplementary:
         totals[category] = 0
         for subcategory in pub.supplementary[category]:
@@ -101,7 +103,7 @@ async def email_fanout(pub: Publication = Body(...)):
     total_categories = 0
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{',' if index == len(totals) - 1 else '.'}"
+            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{'.' if index == len(totals) - 1 else ','}"
             total_categories += 1
         index += 1
 
