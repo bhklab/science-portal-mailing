@@ -16,14 +16,17 @@ authors_collection = db[os.getenv("AUTHOR_COLLECTION")]
 router = APIRouter(prefix="/email")  # Adding email part of route
 
 wording_map = {
-    "code": "code repo",
-    "data": "dataset",
-    "containers": "container",
-    "trials": "trial",
-    "results": "result",
-    "protocols": "protocol",
-    "packages": "package",
-    "miscellaneous": "unclassified resource",
+    "code": {"singular": "Code Repository", "plural": "Code Repositories"},
+    "data": {"singular": "Dataset", "plural": "Datasets"},
+    "containers": {"singular": "Container", "plural": "Containers"},
+    "trials": {"singular": "Trial", "plural": "Trials"},
+    "results": {"singular": "Result", "plural": "Results"},
+    "protocols": {"singular": "Protocol", "plural": "Protocols"},
+    "packages": {"singular": "Package", "plural": "Packages"},
+    "miscellaneous": {
+        "singular": "Unclassified Resource",
+        "plural": "Unclassified Resources",
+    },
 }
 
 
@@ -50,15 +53,12 @@ async def email_director(pub: Publication = Body(...)):
 
     doi_encoding = urllp.quote(pub.doi, safe="~()*!.'")
 
-    publication_breakdown = "The publication consists of "
-
-    index = 0
     total_categories = 0
+    publication_breakdown = ""
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{'.' if index == len(totals) - 1 else ','}"
+            publication_breakdown += f"- {totals[category]} {wording_map.get(category).get('singular') if totals[category] == 1 else wording_map.get(category).get('plural')}<br>"
             total_categories += 1
-        index += 1
 
     message.dynamic_template_data = {
         "name_of_user": f"{first_name.capitalize()} {last_name.capitalize()}",
@@ -80,10 +80,12 @@ async def email_director(pub: Publication = Body(...)):
 
 @router.post("/fanout")
 async def email_fanout(pub: Publication = Body(...)):
+    submitter = pub.submitter.split(".")  # To extract first and last name
+
     message = Mail(
         from_email=os.getenv("FROM_EMAIL"),
         to_emails=os.getenv("DIRECTOR_EMAIL"),
-        subject="Sendgrid Email",
+        subject=f"Congratulations to {submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()} for their publication entitled {pub.name}",
         html_content="<strong>Publication Approval</strong>",
     )
 
@@ -97,22 +99,17 @@ async def email_fanout(pub: Publication = Body(...)):
 
     doi_encoding = urllp.quote(pub.doi, safe="~()*!.'")
 
-    publication_breakdown = "The publication consists of "
-
-    index = 0
     total_categories = 0
+    publication_breakdown = ""
     for category in totals:
         if totals[category] > 0:
-            publication_breakdown += f"{' and ' if index == len(totals) - 1 and total_categories > 0 else ' '}{totals[category]} {wording_map[category]}{'s' if totals[category] > 1 else ''}{'.' if index == len(totals) - 1 else ','}"
+            publication_breakdown += f"- {totals[category]} {wording_map.get(category).get('singular') if totals[category] == 1 else wording_map.get(category).get('plural')}<br>"
             total_categories += 1
-        index += 1
 
     authors = pub.authors.split(";")
 
-    submitter = pub.submitter.split(".")  # To extract first and last name
-
     message.dynamic_template_data = {
-        "main_author": f"{submitter[1].split('@')[0].capitalize()}, {submitter[0].capitalize()}",
+        "main_author": f"{submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()}",
         "publication_title": pub.name,
         "publication_journal": pub.journal,
         "other_authors": f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}"
@@ -120,6 +117,7 @@ async def email_fanout(pub: Publication = Body(...)):
         else pub.authors,
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
+        "subject": f"Congratulations {submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
     }
 
     message.template_id = "d-6ddf5ce280b545bebc6e210da785fd65"
