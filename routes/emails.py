@@ -117,7 +117,7 @@ async def email_fanout(pub: Publication = Body(...)):
         else pub.authors,
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
-        "subject": f"Congratulations {submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
+        "subject": f"Congratulations to {submitter[0].capitalize()} {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
     }
 
     message.template_id = "d-6ddf5ce280b545bebc6e210da785fd65"
