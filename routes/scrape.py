@@ -97,6 +97,15 @@ async def scraping(pub: Publication = Body(...)):
             if "https://" in match.group(1) or "http://" in match.group(1):
                 links.add(match.group(1))
 
+    print(pub.supplementary)
+
+    links.update(
+        link
+        for category in pub.supplementary.values()
+        for subcategory in category.values()
+        for link in subcategory
+    )
+
     raw_body_links = re.findall(r"https?://[^\s\"'<>()]+", body_text)
     cleaned_body_links = {link.rstrip(".,;:!?)") for link in raw_body_links}
     links.update(cleaned_body_links)
