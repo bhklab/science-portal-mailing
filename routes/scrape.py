@@ -1,7 +1,7 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Body, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Body
 import os
-import time
 import re
+import time
 import requests
 from dotenv import load_dotenv
 import pymongo
@@ -18,35 +18,36 @@ from scraping_core.write_to_json import write_to_json
 from models.publication import Publication
 
 
-
 load_dotenv(override=True)
 
-router = APIRouter(prefix="/scrape") #Adding email part of route
+router = APIRouter(prefix="/scrape")  # Adding email part of route
 
-client = pymongo.MongoClient(os.getenv('SP_DATABASE_STRING'))
+client = pymongo.MongoClient(os.getenv("SP_DATABASE_STRING"))
 db = client[os.getenv("DATABASE")]
 main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 scraping_pub_collection = db[os.getenv("SCRAPING_COLLECTION")]
-  
+
+
 @router.post("/publication/one")
 async def scraping(pub: Publication = Body(...)):
-    '''
-        Cross ref and supplementary scrape for newly submitted publication
-        returns: Publication object with all scraped data
-    '''
+    """
+    Cross ref and supplementary scrape for newly submitted publication
+    returns: Publication object with all scraped data
+    """
+
+    print(pub)
 
     existing_doc = main_pub_collection.find_one({"doi": pub.doi})
-    
+
     if existing_doc:
         print("DOI exists.")
         return "DOI exists."
     else:
         print("DOI does not exist yet.")
 
-    publication =  await crossref_scrape(pub)
+    publication = await crossref_scrape(pub)
 
     try:
-
         display = None
         browser = None
 
@@ -59,26 +60,24 @@ async def scraping(pub: Publication = Body(...)):
             # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
             # browser_executable_path="/path/to/some/other/browser",
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
-            lang="en-US",   # this could set iso-language-code in navigator, it was not recommended to change according to docs
-            no_sandbox=True
+            lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
+            no_sandbox=True,
         )
-        await asyncio.sleep(1)
-        tab = await browser.get(f'https://doi.org/{pub.doi}')
-        await asyncio.sleep(2)
-        await tab.select('body') # waits for page to render first
-        
+        tab = await browser.get(f"https://doi.org/{publication.doi}")
+        await tab.wait(2)
+        await tab.select("body")  # waits for page to render first
+
         await tab.scroll_down(100)
         await tab.scroll_down(100)
         await tab.scroll_down(200)
-        
+
         body_text = await tab.get_content()
-
         elements = await tab.select_all("a[href]")
-        await tab.save_screenshot(os.getcwd() + '/screenshots/test.jpeg', 'jpeg')
 
+        await tab.save_screenshot(os.getcwd() + "/screenshots/test.jpeg", "jpeg")
         await tab.close()
         browser.stop()
-        
+
         if display:
             display.stop()
 
@@ -87,7 +86,9 @@ async def scraping(pub: Publication = Body(...)):
             browser.stop()
         if display:
             display.stop()
-        raise HTTPException(status_code=500, detail=f"Error during supplementary scraping: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error during supplementary scraping: {e}"
+        )
 
     links = set()
     for ele in elements:
@@ -96,7 +97,21 @@ async def scraping(pub: Publication = Body(...)):
             if "https://" in match.group(1) or "http://" in match.group(1):
                 links.add(match.group(1))
 
-    # Ensures lowsercase set to ensure we can test for duplicates without affecting casing of original
+    print(pub.supplementary)
+
+    if pub.supplementary:
+        links.update(
+            link
+            for category in pub.supplementary.values()
+            for subcategory in category.values()
+            for link in subcategory
+        )
+
+    raw_body_links = re.findall(r"https?://[^\s\"'<>()]+", body_text)
+    cleaned_body_links = {link.rstrip(".,;:!?)") for link in raw_body_links}
+    links.update(cleaned_body_links)
+
+    # Ensures lowercase set to ensure we can test for duplicates without affecting casing of original
     links_lower = {link.lower() for link in links}
     for new_link in scrape_body(body_text):
         if new_link.lower() not in links_lower:
@@ -106,47 +121,47 @@ async def scraping(pub: Publication = Body(...)):
 
     publication.supplementary = classified_links
 
-
-    write_to_csv("output_data/output.csv", pub.doi, classified_links)
-    write_to_json("output_data/raw_links.json", pub.doi, links)
+    write_to_csv("output_data/output.csv", publication.doi, classified_links)
+    write_to_json("output_data/raw_links.json", publication.doi, links)
 
     scraping_pub_collection.insert_one(publication.model_dump())
 
     return publication
 
-    
 
 async def crossref_scrape(pub: Publication) -> Publication:
-
     try:
         # Get Crossref data for publication
         r = requests.get(
-            f'https://api.crossref.org/works/{pub.doi}',
-            headers = {
-                'User-Agent': f'Python-requests',
-                'Mailto': "matthew.boccalon@uhn.ca"
-            }
+            f"https://api.crossref.org/works/{pub.doi}",
+            headers={
+                "User-Agent": "Python-requests",
+                "Mailto": "matthew.boccalon@uhn.ca",
+            },
         )
     except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=f"Error occured during crossref scrape {str(e)}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=f"Error occured during crossref scrape {str(e)}",
+        )
 
-    
     try:
-        if (r.status_code == 200): # Verify the api request was successful
+        if r.status_code == 200:  # Verify the api request was successful
             data = r.json()
-            if data['status'] == "ok":
-
+            if data["status"] == "ok":
                 author_string = ""
                 affiliations = set()
 
                 # Iterate author list, utilize unidecode to remove special characters, add them to string
-                if (data['message'].get('author')):
-                    for i, author in enumerate(data['message']['author']):
+                if data["message"].get("author"):
+                    for i, author in enumerate(data["message"]["author"]):
                         author_string += f"{unidecode(author.get('family', ''))}, {unidecode(author.get('given', ''))}"
-                        if i != len(data['message']['author']) - 1: # Add ';' to separate author names 
+                        if (
+                            i != len(data["message"]["author"]) - 1
+                        ):  # Add ';' to separate author names
                             author_string += "; "
-                        for affil in author['affiliation']:
-                            affiliations.add(affil['name'])   
+                        for affil in author["affiliation"]:
+                            affiliations.add(affil["name"])
 
                     # Clean up authors field of unnecessary . when next to ;
                     author_string = author_string.replace('.;', ';')
@@ -159,11 +174,45 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 pub.authors = author_string if author_string != "" else pub.authors
                 pub.filteredAuthors = ""
                 pub.affiliations.extend(list(affiliations))
-                pub.citations = data['message'].get('is-referenced-by-count', 0)             
+                pub.citations = data["message"].get("is-referenced-by-count", 0)
                 pub.dateAdded = datetime.now(ZoneInfo("UTC"))
-                pub.publisher = data['message'].get('publisher', '')
+                pub.publisher = data["message"].get("publisher", "")
                 pub.status = "published"
-                pub.image = data['message'].get('container-title', [""])[0].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg' if data['message'].get('container-title') else data['message'].get('institution')[0]['name'].lower().replace(' ', '_').replace('*', '').replace('#', '').replace('%', '').replace('$', '').replace('/', '').replace('\\', '' ).replace('<', '').replace('>', '').replace('!', '').replace(':', '').replace('&amp;', '&') + '.jpg'
+                pub.image = (
+                    data["message"]
+                    .get("container-title", [""])[0]
+                    .lower()
+                    .replace(" ", "_")
+                    .replace("*", "")
+                    .replace("#", "")
+                    .replace("%", "")
+                    .replace("$", "")
+                    .replace("/", "")
+                    .replace("\\", "")
+                    .replace("<", "")
+                    .replace(">", "")
+                    .replace("!", "")
+                    .replace(":", "")
+                    .replace("&amp;", "&")
+                    + ".jpg"
+                    if data["message"].get("container-title")
+                    else data["message"]
+                    .get("institution")[0]["name"]
+                    .lower()
+                    .replace(" ", "_")
+                    .replace("*", "")
+                    .replace("#", "")
+                    .replace("%", "")
+                    .replace("$", "")
+                    .replace("/", "")
+                    .replace("\\", "")
+                    .replace("<", "")
+                    .replace(">", "")
+                    .replace("!", "")
+                    .replace(":", "")
+                    .replace("&amp;", "&")
+                    + ".jpg"
+                )
                 pub.scraped = True
 
                 return pub
@@ -171,5 +220,3 @@ async def crossref_scrape(pub: Publication) -> Publication:
             raise HTTPException(status_code=404)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Crossref Error: {e}")
-
-
