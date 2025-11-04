@@ -8,8 +8,6 @@ profile
 .DS_Store
 
 # Data
-input_data
-output_data
 screenshots
 errors
 
