@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Body
 import os
 import re
+import time
 import requests
 from dotenv import load_dotenv
 import pymongo
@@ -62,9 +63,8 @@ async def scraping(pub: Publication = Body(...)):
             lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
             no_sandbox=True,
         )
-        await asyncio.sleep(1)
         tab = await browser.get(f"https://doi.org/{publication.doi}")
-        await asyncio.sleep(2)
+        await tab.wait(2)
         await tab.select("body")  # waits for page to render first
 
         await tab.scroll_down(100)
@@ -99,12 +99,13 @@ async def scraping(pub: Publication = Body(...)):
 
     print(pub.supplementary)
 
-    links.update(
-        link
-        for category in pub.supplementary.values()
-        for subcategory in category.values()
-        for link in subcategory
-    )
+    if pub.supplementary:
+        links.update(
+            link
+            for category in pub.supplementary.values()
+            for subcategory in category.values()
+            for link in subcategory
+        )
 
     raw_body_links = re.findall(r"https?://[^\s\"'<>()]+", body_text)
     cleaned_body_links = {link.rstrip(".,;:!?)") for link in raw_body_links}
