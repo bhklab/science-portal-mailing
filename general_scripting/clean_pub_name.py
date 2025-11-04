@@ -17,11 +17,8 @@ client = pymongo.MongoClient(os.getenv("SP_DATABASE_STRING"))
 db = client[os.getenv("DATABASE")]
 pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 
-# Find all publications with <.*?> tags in the name field including <scp>, </scp>, <sup>, </sup>, <sub>, </sub>
-query = {
-    "name": {"$regex": "<.*?>"}
-}
-pubs = pub_collection.find(query)
+# Query to find all publications
+pubs = pub_collection.find()
 
 changed_count = 0
 
@@ -31,6 +28,8 @@ for pub in pubs:
     if original_name:
         # Remove all tags like <.*?> (xyz...), <scp>, </scp>, <sup>, </sup>, <sub>, </sub>
         cleaned_name = re.sub(r"<.*?>", "", original_name)
+        cleane_name = re.sub(r"&lt;.*?&gt;", "", cleaned_name)
+        cleaned_name = re.sub(r"&lt;", "", cleaned_name)
         if cleaned_name != original_name:
             pub_collection.update_one(
                 {"_id": pub["_id"]},
