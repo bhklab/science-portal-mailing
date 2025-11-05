@@ -29,9 +29,10 @@ SUPPLEMENTARY = {
     "results": ["gsea", "figshare"],
     "trials": ["clinicalTrial", "euCTR", "vivli", "yoda"],
     "celllines": ["cellosaurus"],
+    "plasmids": ["addgene", "dnasu", "deepomics"],
     "protocols": ["protocolsIO", "bioProtocol", "benchling", "labArchives"],
     "packages": ["bioconductor", "pypi", "CRAN"],
-    "miscellaneous": ["IEEE", "pdf", "docx", "zip", "ppt", "jpg", "png"],
+    "miscellaneous": ["IEEE", "pdf", "docx", "zip", "ppt"],
 }
 
 SUPPLEMENTARY_PATTERNS = {
@@ -152,11 +153,23 @@ SUPPLEMENTARY_PATTERNS = {
         r"https?://(?:(?:www\.)?cellosaurus\.org/|web\.expasy\.org/cellosaurus/).+",
         re.IGNORECASE,
     ),
+    "addgene": re.compile(
+        r"https?://[^ ]*addgene[^ ]*",
+        re.IGNORECASE,
+    ),
+    "dnasu": re.compile(
+        r"https?://[^ ]*dnasu[^ ]*",
+        re.IGNORECASE,
+    ),
+    "deepomics": re.compile(
+        r"https?://[^ ]*plasmid.deepomics[^ ]*",
+        re.IGNORECASE,
+    ),
     "bitbucket": re.compile(r"https?://(?:www\.)?bitbucket\.org/.+", re.IGNORECASE),
     "xls": re.compile(r"https?://.+\.xls(?:\?.+)?", re.IGNORECASE),
     "ppt": re.compile(r"https?://.+\.ppt(?:\?.+)?", re.IGNORECASE),
-    "jpg": re.compile(r"https?://.+\.jpg(?:\?.+)?", re.IGNORECASE),
-    "png": re.compile(r"https?://.+\.png(?:\?.+)?", re.IGNORECASE),
+    # "jpg": re.compile(r"https?://.+\.jpg(?:\?.+)?", re.IGNORECASE),
+    # "png": re.compile(r"https?://.+\.png(?:\?.+)?", re.IGNORECASE),
 }
 
 DUD_PATTERNS = [
