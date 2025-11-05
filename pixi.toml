@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [tasks]
 start = "uvicorn main:app --reload --reload-dir ./"
-prod_start = "gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000"
+prod_start = "gunicorn --chdir /var/www/science-portal-mailing main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000"
 
 [dependencies]
 python = ">=3.13.3,<3.14"

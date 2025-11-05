@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Body, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Body
 import os
 import urllib.parse as urllp
 from sendgrid import SendGridAPIClient
