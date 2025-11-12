@@ -12,7 +12,7 @@ client = genai.Client()
 
 
 async def summary(doi: str):
-    max_retries = 5
+    max_retries = 10
     for retry in range(max_retries):
         print(f"Attempt: {retry + 1}")
         try:
@@ -47,7 +47,7 @@ async def summary(doi: str):
 
             if display:
                 display.stop()
-
+            break
         except Exception as e:
             if browser:
                 browser.stop()
@@ -61,7 +61,7 @@ async def summary(doi: str):
         Summarize this publication in maximum 2 sentences and 300 characters for someone who may be interested in 
         reading further, ignore HTML: {body_text}
     """
-    max_retries = 5
+    max_retries = 10
     response = None
     for retry in range(max_retries):
         print(f"Attempt: {retry + 1}")
