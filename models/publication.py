@@ -6,6 +6,7 @@ import datetime
 class Publication(BaseModel):
     PMID: Optional[int] = -1
     doi: str
+    summary: Optional[str] = None
     date: Optional[str] = None
     name: Optional[str] = None
     journal: Optional[str] = None
