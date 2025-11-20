@@ -16,6 +16,7 @@ from scraping_core.classify_links import classify_all
 from scraping_core.write_to_csv import write_to_csv
 from scraping_core.write_to_json import write_to_json
 from models.publication import Publication
+from llm_playground.LLM_scraping.publication_summary import summary_html
 
 
 load_dotenv(override=True)
@@ -66,12 +67,14 @@ async def scraping(pub: Publication = Body(...)):
         tab = await browser.get(f"https://doi.org/{publication.doi}")
         await tab.wait(2)
         await tab.select("body")  # waits for page to render first
-
-        await tab.scroll_down(100)
-        await tab.scroll_down(100)
         await tab.scroll_down(200)
 
         body_text = await tab.get_content()
+
+        # If the director fanout is requested,
+        if pub.fanout.get("request", False):
+            publication.summary = await summary_html(body_text)
+
         elements = await tab.select_all("a[href]")
 
         await tab.save_screenshot(os.getcwd() + "/screenshots/test.jpeg", "jpeg")
@@ -131,7 +134,7 @@ async def scraping(pub: Publication = Body(...)):
 
 async def crossref_scrape(pub: Publication) -> Publication:
     try:
-        # Get Crossref data for publication
+        # Get publication metadata from Crossref
         r = requests.get(
             f"https://api.crossref.org/works/{pub.doi}",
             headers={
