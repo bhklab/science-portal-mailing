@@ -11,7 +11,7 @@ load_dotenv()
 client = genai.Client()
 
 
-async def summary(doi: str):
+async def summary_doi(doi: str):
     max_retries = 10
     for retry in range(max_retries):
         print(f"Attempt: {retry + 1}")
@@ -35,8 +35,6 @@ async def summary(doi: str):
             await tab.wait(2)
             await tab.select("body")  # waits for page to render first
 
-            await tab.scroll_down(100)
-            await tab.scroll_down(100)
             await tab.scroll_down(200)
 
             # body_text = await tab.get_all_urls()
@@ -84,8 +82,37 @@ async def summary(doi: str):
     return response.text
 
 
+async def summary_html(body_text: str):
+    # Prompt
+    prompt = f"""
+        Summarize this publication in maximum 2 sentences and 300 characters for someone who may be interested in 
+        reading further, ignore HTML: {body_text}
+    """
+    max_retries = 10
+    response = None
+    for retry in range(max_retries):
+        print(f"Attempt: {retry + 1}")
+        try:
+            # Generate content
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[prompt],
+                config=types.GenerateContentConfig(
+                    system_instruction="You are an expert in cancer research",
+                    temperature=0.5,
+                ),
+            )
+            break
+        except Exception as e:
+            print(e)
+
+        time.sleep(1)
+
+    return response.text
+
+
 async def main():
-    await summary("10.1038/s41598-025-20812-1")
+    await summary_doi("10.1038/s41598-025-20812-1")
 
 
 if __name__ == "__main__":
