@@ -6,7 +6,7 @@ from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 from models.publication import Publication
 import pymongo
-from llm_playground.LLM_scraping.publication_summary import summary
+from llm_playground.LLM_scraping.publication_summary import summary_doi
 
 load_dotenv(override=True)
 
@@ -109,8 +109,6 @@ async def email_fanout(pub: Publication = Body(...)):
 
     authors = pub.authors.split(";")
 
-    publication_summary = await summary(pub.doi)
-
     message.dynamic_template_data = {
         "main_author": f"{submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()}",
         "publication_title": pub.name,
@@ -121,7 +119,7 @@ async def email_fanout(pub: Publication = Body(...)):
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
         "subject": f"Congratulations to {submitter[0].capitalize()} {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
-        "publication_summary": publication_summary,
+        "publication_summary": pub.summary,
     }
 
     message.template_id = "d-6ddf5ce280b545bebc6e210da785fd65"
