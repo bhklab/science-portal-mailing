@@ -66,6 +66,7 @@ async def email_director(pub: Publication = Body(...)):
         "email_of_user": pub.submitter,
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
+        "publication_summary": pub.summary,
     }
 
     message.template_id = "d-c684d53e767243d3be5481abd93b2510"
