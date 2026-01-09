@@ -59,7 +59,7 @@ async def summary_doi(doi: str):
         Summarize this publication in maximum 2 sentences and 300 characters for someone who may be interested in 
         reading further, ignore HTML: {body_text}
     """
-    max_retries = 10
+    max_retries = 5
     response = None
     for retry in range(max_retries):
         print(f"Attempt: {retry + 1}")
@@ -83,12 +83,11 @@ async def summary_doi(doi: str):
 
 
 async def summary_html(body_text: str):
-    # Prompt
     prompt = f"""
         Summarize this publication in maximum 2 sentences and 300 characters for someone who may be interested in 
         reading further, ignore HTML: {body_text}
     """
-    max_retries = 10
+    max_retries = 5
     response = None
     for retry in range(max_retries):
         print(f"Attempt: {retry + 1}")
