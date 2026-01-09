@@ -1,7 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Body
 import os
 import re
-import time
 import requests
 from dotenv import load_dotenv
 import pymongo
@@ -17,6 +16,7 @@ from scraping_core.write_to_csv import write_to_csv
 from scraping_core.write_to_json import write_to_json
 from models.publication import Publication
 from llm_playground.LLM_scraping.publication_summary import summary_html
+from bs4 import BeautifulSoup
 
 
 load_dotenv(override=True)
@@ -71,8 +71,8 @@ async def scraping(pub: Publication = Body(...)):
 
         body_text = await tab.get_content()
 
-        # If the director fanout is requested,
-        if pub.fanout.get("request", False):
+        # If the director fanout is requested and the abstract isn't available from crossref
+        if pub.fanout.get("request", False) and not publication.summary:
             publication.summary = await summary_html(body_text)
 
         elements = await tab.select_all("a[href]")
@@ -188,6 +188,11 @@ async def crossref_scrape(pub: Publication) -> Publication:
                         ),
                     ),
                 )
+                # extract and clean the abstract (if it exists)
+                pub.summary = BeautifulSoup(
+                    data["message"].get("abstract", ""), "html.parser"
+                ).get_text()
+                pub.summary = pub.summary.replace("Abstract", "").strip()
                 pub.journal = (
                     data["message"]
                     .get("container-title")[0]

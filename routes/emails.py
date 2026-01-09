@@ -6,7 +6,6 @@ from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 from models.publication import Publication
 import pymongo
-from llm_playground.LLM_scraping.publication_summary import summary_doi
 
 load_dotenv(override=True)
 
