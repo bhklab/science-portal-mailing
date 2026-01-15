@@ -74,7 +74,7 @@ async def email_director(pub: Publication = Body(...)):
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
         await sg.send(message)
     except Exception as e:
-        HTTPException(status_code=500, detail=f"Error sending director email {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error sending director email {str(e)}")
 
     return {"message": "Completed scraping and sent out director email."}
 
@@ -128,4 +128,4 @@ async def email_fanout(pub: Publication = Body(...)):
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
         await sg.send(message)
     except Exception as e:
-        HTTPException(status_code=500, detail=f"Error sending fanout email {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error sending fanout email {str(e)}")
