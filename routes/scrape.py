@@ -141,6 +141,7 @@ async def crossref_scrape(pub: Publication) -> Publication:
                 "User-Agent": "Python-requests",
                 "Mailto": "matthew.boccalon@uhn.ca",
             },
+            timeout=60,
         )
     except HTTPException as e:
         raise HTTPException(

@@ -57,6 +57,7 @@ async def publication_scraping():
                     "http://localhost:8000/scrape/publication/one",
                     json=pub_dump,
                     headers={"User-Agent": "Python-requests"},
+                    timeout=60,
                 )
                 if r.status_code == 200:
                     print(r._content)

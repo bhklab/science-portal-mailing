@@ -10,7 +10,8 @@ from google.genai import types
 
 # Load environment variables
 load_dotenv()
-print("GEMINI_API_KEY:", os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+print("GEMINI_API_KEY:", f"{api_key[:4]}...{api_key[-4:]}" if api_key and len(api_key) > 8 else "NOT SET")
 client = genai.Client()
 
 # find the PDF file
