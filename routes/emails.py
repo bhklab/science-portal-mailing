@@ -15,6 +15,44 @@ authors_collection = db[os.getenv("AUTHOR_COLLECTION")]
 
 router = APIRouter(prefix="/email")  # Adding email part of route
 
+
+def parse_name_from_email(email: str) -> tuple[str, str]:
+    """
+    Safely parse first and last name from email address.
+    Expects format: firstname.lastname@domain.com
+    Returns (first_name, last_name) with fallbacks if parsing fails.
+    """
+    if not email or "@" not in email:
+        return ("Unknown", "User")
+
+    local_part = email.split("@")[0]
+    parts = local_part.split(".")
+
+    if len(parts) >= 2:
+        return (parts[0].capitalize(), parts[1].capitalize())
+    elif len(parts) == 1 and parts[0]:
+        return (parts[0].capitalize(), "")
+    else:
+        return ("Unknown", "User")
+
+
+def format_authors_summary(authors_str: str) -> str:
+    """
+    Safely format authors string for display.
+    Shows first 3 and last 3 authors if more than 6, otherwise shows all.
+    """
+    if not authors_str:
+        return ""
+
+    authors = [a.strip() for a in authors_str.split(";") if a.strip()]
+
+    if len(authors) <= 6:
+        return authors_str
+
+    first_three = authors[:3]
+    last_three = authors[-3:]
+    return "; ".join(first_three) + "; ... ; " + "; ".join(last_three)
+
 wording_map = {
     "code": {"singular": "Code Repository", "plural": "Code Repositories"},
     "data": {"singular": "Dataset", "plural": "Datasets"},
@@ -39,9 +77,7 @@ async def email_director(pub: Publication = Body(...)):
         html_content="<strong>Publication Approval</strong>",
     )
 
-    split_email = pub.submitter.split(".")
-    first_name = split_email[0]
-    last_name = split_email[1].split("@")[0]
+    first_name, last_name = parse_name_from_email(pub.submitter)
 
     totals = dict()
 
@@ -81,12 +117,12 @@ async def email_director(pub: Publication = Body(...)):
 
 @router.post("/fanout")
 async def email_fanout(pub: Publication = Body(...)):
-    submitter = pub.submitter.split(".")  # To extract first and last name
+    first_name, last_name = parse_name_from_email(pub.submitter)
 
     message = Mail(
         from_email=os.getenv("FROM_EMAIL"),
         to_emails=os.getenv("DIRECTOR_EMAIL"),
-        subject=f"Congratulations to {submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()} for their publication entitled {pub.name}",
+        subject=f"Congratulations to {first_name} {last_name} for their publication entitled {pub.name}",
         html_content="<strong>Publication Approval</strong>",
     )
 
@@ -107,18 +143,14 @@ async def email_fanout(pub: Publication = Body(...)):
             publication_breakdown += f"- {totals[category]} {wording_map.get(category).get('singular') if totals[category] == 1 else wording_map.get(category).get('plural')}<br>"
             total_categories += 1
 
-    authors = pub.authors.split(";")
-
     message.dynamic_template_data = {
-        "main_author": f"{submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()}",
+        "main_author": f"{first_name} {last_name}",
         "publication_title": pub.name,
         "publication_journal": pub.journal,
-        "other_authors": f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}"
-        if len(authors) > 5
-        else pub.authors,
+        "other_authors": format_authors_summary(pub.authors),
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
-        "subject": f"Congratulations to {submitter[0].capitalize()} {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
+        "subject": f"Congratulations to {first_name} {last_name} for their new publication in {pub.journal}",
         "publication_summary": pub.summary,
     }
 
