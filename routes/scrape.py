@@ -69,7 +69,7 @@ async def scraping(pub: Publication = Body(...)):
         # Attempt to get past cloudflare verification
         try:
             await tab.verify_cf(
-                (os.getcwd() + "/screenshots/verify/cf_temp.png"), flash=False
+                (os.getcwd() + "/screenshots/verify/temp.png"), flash=False
             )
         except Exception as e:
             print("captcha cannot be solved:", e)
