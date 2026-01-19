@@ -11,11 +11,16 @@ from google.genai import types
 # Load environment variables
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-print("GEMINI_API_KEY:", f"{api_key[:4]}...{api_key[-4:]}" if api_key and len(api_key) > 8 else "NOT SET")
+print(
+    "GEMINI_API_KEY:",
+    f"{api_key[:4]}...{api_key[-4:]}" if api_key and len(api_key) > 8 else "NOT SET",
+)
 client = genai.Client()
 
 # find the PDF file
-pdf_path = pathlib.Path("/Users/Zeas/Desktop/uhn/science-portal-mailing/LLM_testing/data/#94.pdf")
+pdf_path = pathlib.Path(
+    "/Users/Zeas/Desktop/uhn/science-portal-mailing/LLM_testing/data/#94.pdf"
+)
 output_file = "extracted_pub.json"
 
 
@@ -33,12 +38,14 @@ class Supplementary(BaseModel):
     animalModels: Optional[List[str]] = None
     plasmids: Optional[List[str]] = None
 
+
 # Define the OtherLink schema for new links
 class OtherLink(BaseModel):
     name: str = ""
     recommendedCategory: str = ""
     description: str = ""
     link: str = ""
+
 
 # Define the Pub schema for publication information
 class Pub(BaseModel):
@@ -60,6 +67,7 @@ class Pub(BaseModel):
     supplementary: Supplementary = Field(default_factory=Supplementary)
     otherLinks: List[OtherLink] = []
     submitter: str = ""
+
 
 # Define the prompt for the Gemini model
 prompt = """
@@ -132,13 +140,13 @@ ZIP goes into Miscellaneous
 
 # Generate content using the Gemini model
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model=os.getenv("GEMINI_MODEL"),
     contents=[
         types.Part.from_bytes(
             data=pdf_path.read_bytes(),
             mime_type="application/pdf",
         ),
-        prompt
+        prompt,
     ],
     config={
         "response_mime_type": "application/json",

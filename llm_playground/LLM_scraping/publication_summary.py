@@ -66,7 +66,7 @@ async def summary_doi(doi: str):
         try:
             # Generate content
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=os.getenv("GEMINI_MODEL"),
                 contents=[prompt],
                 config=types.GenerateContentConfig(
                     system_instruction="You are an expert in cancer research",
@@ -94,7 +94,7 @@ async def summary_html(body_text: str):
         try:
             # Generate content
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=os.getenv("GEMINI_MODEL"),
                 contents=[prompt],
                 config=types.GenerateContentConfig(
                     system_instruction="You are an expert in cancer research",
