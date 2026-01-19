@@ -96,15 +96,25 @@ async def email_director(pub: Publication = Body(...)):
             publication_breakdown += f"- {totals[category]} {wording_map.get(category).get('singular') if totals[category] == 1 else wording_map.get(category).get('plural')}<br>"
             total_categories += 1
 
+    submitter = pub.submitter.split(".")
+    authors = pub.authors.split(";")
+
     message.dynamic_template_data = {
         "name_of_user": f"{first_name.capitalize()} {last_name.capitalize()}",
         "email_of_user": pub.submitter,
         "publication_breakdown": publication_breakdown,
         "link_to_publication": f"{os.getenv('DOMAIN')}/publication/{doi_encoding}",
         "publication_summary": pub.summary,
+        "main_author": f"{submitter[0].capitalize()}, {submitter[1].split('@')[0].capitalize()}",
+        "publication_title": pub.name,
+        "publication_journal": pub.journal,
+        "other_authors": f"{authors[0]}; {authors[1]}; {authors[2]}; {authors[len(authors) - 3]}; {authors[len(authors) - 2]}; {authors[len(authors) - 1]}"
+        if len(authors) > 5
+        else pub.authors,
+        "subject": f"Congratulations to {submitter[0].capitalize()} {submitter[1].split('@')[0].capitalize()} for their new publication in {pub.journal}",
     }
 
-    message.template_id = "d-c684d53e767243d3be5481abd93b2510"
+    message.template_id = "d-6ddf5ce280b545bebc6e210da785fd65"
 
     try:
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))

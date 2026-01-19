@@ -11,6 +11,7 @@ class Publication(BaseModel):
     name: Optional[str] = None
     journal: Optional[str] = None
     type: Optional[str] = None
+    abstract: Optional[str] = None
     authors: Optional[str] = None
     filteredAuthors: Optional[str] = None
     affiliations: Optional[list[str]] = []

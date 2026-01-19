@@ -71,8 +71,8 @@ async def scraping(pub: Publication = Body(...)):
 
         body_text = await tab.get_content()
 
-        # If the director fanout is requested and the abstract isn't available from crossref
-        if pub.fanout.get("request", False) and not publication.summary:
+        # If the director fanout is requested, create 2 sentence summary
+        if pub.fanout.get("request", False):
             publication.summary = await summary_html(body_text)
 
         elements = await tab.select_all("a[href]")
@@ -190,10 +190,10 @@ async def crossref_scrape(pub: Publication) -> Publication:
                     ),
                 )
                 # extract and clean the abstract (if it exists)
-                pub.summary = BeautifulSoup(
+                pub.abstract = BeautifulSoup(
                     data["message"].get("abstract", ""), "html.parser"
                 ).get_text()
-                pub.summary = pub.summary.replace("Abstract", "").strip()
+                pub.abstract = pub.abstract.replace("Abstract", "").strip()
                 pub.journal = (
                     data["message"]
                     .get("container-title")[0]
