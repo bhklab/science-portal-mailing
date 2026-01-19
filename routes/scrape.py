@@ -56,14 +56,22 @@ async def scraping(pub: Publication = Body(...)):
 
         browser = await uc.start(
             headless=False,
-            # user_data_dir= os.getcwd() + "/profile", # by specifying it, it won't be automatically cleaned up when finished
-            # browser_executable_path="/path/to/some/other/browser",
+            # user_data_dir=os.getcwd()
+            # + "/profile",  # will be automatically cleaned up when finished if DNE
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
             lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
             no_sandbox=True,
         )
         tab = await browser.get(f"https://doi.org/{publication.doi}")
-        await tab.wait(2)
+
+        await tab.wait(10)  # wait to ensure captcha can appear
+
+        # Attempt to get past cloudflare verification
+        try:
+            await tab.cf_verify()
+        except Exception as e:
+            print("captcha cannot be solve:", e)
+
         await tab.select("body")  # waits for page to render first
         await tab.scroll_down(200)
 

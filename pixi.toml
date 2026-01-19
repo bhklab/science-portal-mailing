@@ -23,6 +23,6 @@ google-genai = ">=1.48.0,<2"
 beautifulsoup4 = ">=4.14.3,<5"
 
 [pypi-dependencies]
-nodriver = ">=0.46.1, <0.47"
+nodriver = ">=0.48.1, <0.48.2"
 opencv-python = ">=4.11.0.86, <5"
 gunicorn = ">=23.0.0, <24"
