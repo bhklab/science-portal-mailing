@@ -64,7 +64,7 @@ async def scraping(pub: Publication = Body(...)):
         )
         tab = await browser.get(f"https://doi.org/{publication.doi}")
 
-        await tab.wait(10)  # wait to ensure captcha can appear
+        await tab.wait(5)  # wait to ensure captcha can appear
 
         # Attempt to get past cloudflare verification
         try:
@@ -73,6 +73,8 @@ async def scraping(pub: Publication = Body(...)):
             )
         except Exception as e:
             print("captcha cannot be solved:", e)
+
+        await tab.wait(7)  # wait to ensure captcha can complete
 
         await tab.select("body")  # waits for page to render first
         await tab.scroll_down(200)
