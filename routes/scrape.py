@@ -68,7 +68,7 @@ async def scraping(pub: Publication = Body(...)):
 
         # Attempt to get past cloudflare verification
         try:
-            await tab.cf_verify(
+            await tab.verify_cf(
                 (os.getcwd() + "/screenshots/verify/cf_temp.png"), flash=False
             )
         except Exception as e:
