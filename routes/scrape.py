@@ -68,22 +68,22 @@ async def scraping(pub: Publication = Body(...)):
 
         # Attempt to get past cloudflare verification
         try:
-            await tab.cf_verify()
+            await tab.cf_verify(
+                (os.getcwd() + "/screenshots/verify/cf_temp.png"), flash=False
+            )
         except Exception as e:
-            print("captcha cannot be solve:", e)
+            print("captcha cannot be solved:", e)
 
         await tab.select("body")  # waits for page to render first
         await tab.scroll_down(200)
 
         body_text = await tab.get_content()
-        print("body text", body_text)
 
         # If the director fanout is requested, create 2 sentence summary
         if pub.fanout.get("request", False):
             publication.summary = await summary_html(body_text)
 
         elements = await tab.select_all("a[href]")
-        print("elements", elements)
 
         await tab.save_screenshot(os.getcwd() + "/screenshots/test.jpeg", "jpeg")
         await tab.close()
