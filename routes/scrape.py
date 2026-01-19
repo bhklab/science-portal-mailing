@@ -36,8 +36,6 @@ async def scraping(pub: Publication = Body(...)):
     returns: Publication object with all scraped data
     """
 
-    print(pub)
-
     existing_doc = main_pub_collection.find_one({"doi": pub.doi})
 
     if existing_doc:
@@ -99,8 +97,6 @@ async def scraping(pub: Publication = Body(...)):
         if match:
             if "https://" in match.group(1) or "http://" in match.group(1):
                 links.add(match.group(1))
-
-    print(pub.supplementary)
 
     if pub.supplementary:
         links.update(
