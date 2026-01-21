@@ -29,8 +29,8 @@ main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 scraping_pub_collection = db[os.getenv("SCRAPING_COLLECTION")]
 
 
-@router.post("/publication/one")
-async def scraping(pub: Publication = Body(...)):
+@router.post("/publication/bulk/one")
+async def bulk_scraping(pub: Publication = Body(...)):
     """
     Cross ref and supplementary scrape for newly submitted publication
     returns: Publication object with all scraped data
@@ -56,8 +56,8 @@ async def scraping(pub: Publication = Body(...)):
 
         browser = await uc.start(
             headless=False,
-            # user_data_dir=os.getcwd()
-            # + "/profile",  # will be automatically cleaned up when finished if DNE
+            user_data_dir=os.getcwd()
+            + "/profile",  # will be automatically cleaned up when finished if DNE
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
             lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
             no_sandbox=True,
@@ -90,6 +90,153 @@ async def scraping(pub: Publication = Body(...)):
 
         await tab.save_screenshot(os.getcwd() + "/screenshots/end_shot.jpeg", "jpeg")
         await tab.close()
+        browser.stop()
+
+        if display:
+            display.stop()
+
+    except Exception as e:
+        if browser:
+            browser.stop()
+        if display:
+            display.stop()
+        raise HTTPException(
+            status_code=500, detail=f"Error during supplementary scraping: {e}"
+        )
+
+    links = set()
+    for ele in elements:
+        match = re.search(r'href="([^"]+)"', str(ele))
+        if match:
+            if "https://" in match.group(1) or "http://" in match.group(1):
+                links.add(match.group(1))
+
+    if pub.supplementary:
+        links.update(
+            link
+            for category in pub.supplementary.values()
+            for subcategory in category.values()
+            for link in subcategory
+        )
+
+    raw_body_links = re.findall(r"https?://[^\s\"'<>()]+", body_text)
+    cleaned_body_links = {link.rstrip(".,;:!?)") for link in raw_body_links}
+    links.update(cleaned_body_links)
+
+    # Ensures lowercase set to ensure we can test for duplicates without affecting casing of original
+    links_lower = {link.lower() for link in links}
+    for new_link in scrape_body(body_text):
+        if new_link.lower() not in links_lower:
+            links.add(new_link)
+
+    classified_links = classify_all(links)
+
+    publication.supplementary = classified_links
+
+    write_to_csv("output_data/output.csv", publication.doi, classified_links)
+    write_to_json("output_data/raw_links.json", publication.doi, links)
+
+    scraping_pub_collection.insert_one(publication.model_dump())
+
+    return publication
+
+
+@router.post("/publication/one")
+async def scraping(pub: Publication = Body(...)):
+    """
+    Cross ref and supplementary scrape for newly submitted publication
+    returns: Publication object with all scraped data
+    """
+
+    existing_doc = main_pub_collection.find_one({"doi": pub.doi})
+
+    if existing_doc:
+        print("DOI exists.")
+        return "DOI exists."
+    else:
+        print("DOI does not exist yet.")
+
+    publication = await crossref_scrape(pub)
+
+    try:
+        display = None
+        browser = None
+
+        if os.getenv("LINUX") == "yes":
+            display = Display(visible=0, size=(1920, 1080))
+            display.start()
+
+        browser = await uc.start(
+            headless=False,
+            user_data_dir=os.getcwd()
+            + "/profile",  # will be automatically cleaned up when finished if DNE
+            # browser_args=['--some-browser-arg=true', '--some-other-option'],
+            lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
+            no_sandbox=True,
+        )
+
+        # Navigate to pubmed, find article, open tab via doi link
+        tab = await browser.get("https://pubmed.ncbi.nlm.nih.gov/")
+        search_bar = await tab.select("input[type=search]")
+        await search_bar.send_keys(publication.doi)
+        search_button = await tab.select("button[type=submit]")
+        await tab.wait(1)
+        await search_button.click()
+        await tab.wait(1)
+        doi_link = await tab.select("span.identifier.doi a.id-link")
+
+        # Mimic human movement
+        await tab.scroll_down(100)
+        await tab.scroll_down(100)
+
+        # If doi_link DNE, throw error for finding DOI
+        if not doi_link:
+            raise HTTPException(status_code=500, detail="Error finding doi")
+
+        await doi_link.click()
+        await tab.wait(2)
+
+        # Locate newly opened tab, if not identified return error
+        doi_tab = None
+        if len(browser.tabs) > 1:
+            doi_tab = browser.tabs[-1]
+        else:
+            raise HTTPException(status_code=500, detail="Error finding doi page")
+
+        await doi_tab.wait(3)
+
+        await doi_tab.save_screenshot(
+            os.getcwd() + "/screenshots/beg_shot.jpeg", "jpeg"
+        )
+
+        await doi_tab.select("body")  # Waits for page to render first
+
+        # Attempt to get past cloudflare verification
+        try:
+            await doi_tab.verify_cf(
+                (os.getcwd() + "/screenshots/verify/temp.png"), flash=False
+            )
+        except Exception as e:
+            print("captcha cannot be solved:", e)
+
+        await doi_tab.wait(2)
+
+        # Mimic human movement
+        await tab.scroll_down(100)
+        await tab.scroll_down(100)
+
+        body_text = await doi_tab.get_content()
+
+        # If the director fanout is requested, create 2 sentence summary
+        if pub.fanout.get("request", False):
+            publication.summary = await summary_html(body_text)
+
+        elements = await doi_tab.select_all("a[href]")
+
+        await doi_tab.save_screenshot(
+            os.getcwd() + "/screenshots/end_shot.jpeg", "jpeg"
+        )
+        await doi_tab.close()
         browser.stop()
 
         if display:
