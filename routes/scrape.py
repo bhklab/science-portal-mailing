@@ -29,7 +29,7 @@ main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 scraping_pub_collection = db[os.getenv("SCRAPING_COLLECTION")]
 
 
-@router.post("/publication/bulk/one")
+@router.post("/publication/one")
 async def bulk_scraping(pub: Publication = Body(...)):
     """
     Cross ref and supplementary scrape for newly submitted publication
@@ -64,7 +64,7 @@ async def bulk_scraping(pub: Publication = Body(...)):
         )
         tab = await browser.get(f"https://doi.org/{publication.doi}")
 
-        await tab.wait(5)  # wait to ensure captcha can appear
+        await tab.wait(2)  # wait to ensure captcha can appear
 
         await tab.save_screenshot(os.getcwd() + "/screenshots/beg_shot.jpeg", "jpeg")
         # Attempt to get past cloudflare verification
@@ -75,7 +75,7 @@ async def bulk_scraping(pub: Publication = Body(...)):
         except Exception as e:
             print("captcha cannot be solved:", e)
 
-        await tab.wait(5)  # wait to ensure captcha can complete
+        await tab.wait(2)  # wait to ensure captcha can complete
 
         await tab.select("body")  # waits for page to render first
         await tab.scroll_down(200)
@@ -141,7 +141,7 @@ async def bulk_scraping(pub: Publication = Body(...)):
     return publication
 
 
-@router.post("/publication/one")
+@router.post("/publication/bulk/one")
 async def scraping(pub: Publication = Body(...)):
     """
     Cross ref and supplementary scrape for newly submitted publication
