@@ -71,6 +71,13 @@ wording_map = {
 
 @router.post("/director")
 async def email_director(pub: Publication = Body(...)):
+    """
+    Route that dispatches the email to be sent to the director. This email highlights publication resource contributions and
+    credits scientific leads and the submitter.
+
+    :param pub: publication data which will have it's details emailed out to the director
+    :type pub: Publication (refer model)
+    """
     message = Mail(
         from_email=os.getenv("FROM_EMAIL"),
         to_emails=os.getenv("DIRECTOR_EMAIL"),
