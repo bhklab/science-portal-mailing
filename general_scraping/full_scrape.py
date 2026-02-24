@@ -26,15 +26,7 @@ async def publication_scraping():
         f"{os.getcwd()}/general_scraping/output_data/pubs-2022-to-2025-utf-8.csv",
         encoding="utf-8",
     )
-
     dicts = df.to_dict(orient="records")
-
-    with open(
-        f"{os.getcwd()}/general_scraping/errors/testing-format.json",
-        mode="w",
-        encoding="utf-8",
-    ) as f:
-        json.dump(dicts, f, indent=2)
 
     pubs = []
     errors = []
@@ -42,10 +34,10 @@ async def publication_scraping():
     for dict in dicts:
         pubs.append(
             Publication(
-                PMID=dict["PMID"],
+                PMID=dict.get("PMID"),
                 doi=dict["doi"],
-                authors=dict["authors"],
-                type=dict["type"],
+                authors=dict.get("authors"),
+                type=dict.get("type"),
             )
         )
 
@@ -57,7 +49,7 @@ async def publication_scraping():
                     "http://localhost:8000/scrape/publication/one",
                     json=pub_dump,
                     headers={"User-Agent": "Python-requests"},
-                    timeout=60,
+                    timeout=120,
                 )
                 if r.status_code == 200:
                     print(r._content)
