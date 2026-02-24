@@ -6,7 +6,7 @@ GSE_MENTION_PATTERN = re.compile(r"\bGSE\s?-?\s?(\d{4,6})\b", re.IGNORECASE)
 NCT_MENTION_PATTERN = re.compile(r"\bNCT[\s-]?(\d{8})\b", re.IGNORECASE)
 DB_GAP_PATTERN = re.compile(r"\b(phs\d{6}\.v\d+\.p\d+)\b", re.IGNORECASE)
 EGA_PATTERN = re.compile(r"\b(EGAS\d+)\b", re.IGNORECASE)
-CELLOSAURUS_PATTERN = (re.compile(r"CVCL_XXXX", re.IGNORECASE),)
+CELLOSAURUS_PATTERN = re.compile(r"CVCL_XXXX", re.IGNORECASE)
 
 # DOI Patterns
 DOI_PATTERNS = {
