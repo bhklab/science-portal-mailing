@@ -150,7 +150,7 @@ SUPPLEMENTARY_PATTERNS = {
         r"https?://(?:www\.)?mynotebook\.labarchives\.com/.+", re.IGNORECASE
     ),
     "cellosaurus": re.compile(
-        r"https?://(?:(?:www\.)?cellosaurus\.org/|web\.expasy\.org/cellosaurus/).+",
+        r"https?://(?:(?:www\.)?cellosaurus\.org/|web\.expasy\.org/cellosaurus/)(CVCL_[A-Z0-9]{4})\b",
         re.IGNORECASE,
     ),
     "addgene": re.compile(

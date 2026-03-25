@@ -23,9 +23,10 @@ main_pub_collection = db[os.getenv("PUBLICATION_COLLECTION")]
 
 async def publication_scraping():
     df = pd.read_csv(
-        f"{os.getcwd()}/general_scraping/output_data/pubs-2022-to-2025-utf-8.csv",
+        f"{os.getcwd()}/general_scraping/output_data/pubs-2022-to-current-2026-02-25-utf-8.csv",
         encoding="utf-8",
     )
+    df = df.fillna("")
     dicts = df.to_dict(orient="records")
 
     pubs = []
@@ -34,10 +35,10 @@ async def publication_scraping():
     for dict in dicts:
         pubs.append(
             Publication(
-                PMID=dict.get("PMID"),
+                PMID=dict.get("PMID", -1),
                 doi=dict["doi"],
-                authors=dict.get("authors"),
-                type=dict.get("type"),
+                authors=dict.get("authors", ""),
+                type=dict.get("type", ""),
             )
         )
 
