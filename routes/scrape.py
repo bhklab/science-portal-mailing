@@ -83,7 +83,7 @@ async def bulk_scraping(pub: Publication = Body(...)):
         body_text = await tab.get_content()
 
         # If the director fanout is requested, create 2 sentence summary
-        if pub.fanout.get("request", False):
+        if getattr(pub, "fanout", None) and pub.fanout.get("request", False):
             publication.summary = await summary_html(body_text)
 
         elements = await tab.select_all("a[href]")
