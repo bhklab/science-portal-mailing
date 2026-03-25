@@ -1,13 +1,16 @@
 import pandas as pd
+from datetime import datetime
 
 # Read the CSV files with UTF-8 encoding
 df1 = pd.read_csv("input_data/pubs-2022-utf-8.csv", encoding="utf-8")
 df2 = pd.read_csv("input_data/pubs-2023-utf-8.csv", encoding="utf-8")
 df3 = pd.read_csv("input_data/pubs-2024-utf-8.csv", encoding="utf-8")
 df4 = pd.read_csv("input_data/pubs-2025-utf-8.csv", encoding="utf-8")
+df5 = pd.read_csv("input_data/pubs-2026-utf-8.csv", encoding="utf-8")
+
 
 # Combine the DataFrames
-combined_df = pd.concat([df1, df2, df3, df4], ignore_index=True, sort=False)
+combined_df = pd.concat([df1, df2, df3, df4, df5], ignore_index=True, sort=False)
 
 # Select and rename columns
 selected_columns = [
@@ -62,4 +65,7 @@ filtered_selected_df = df_selected[
 ]
 
 # Export the filtered results
-filtered_selected_df.to_csv("output_data/pubs-2022-to-2025-utf-8.csv", index=False)
+filtered_selected_df.to_csv(
+    f"output_data/pubs-2022-to-current-{str(datetime.now())[:10]}-utf-8.csv",
+    index=False,
+)
