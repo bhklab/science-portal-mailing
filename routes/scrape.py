@@ -60,7 +60,7 @@ async def bulk_scraping(pub: Publication = Body(...)):
             + "/profile",  # will be automatically cleaned up when finished if DNE
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
             lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
-            no_sandbox=True,
+            sandbox=False,
         )
         tab = await browser.get(f"https://doi.org/{publication.doi}")
 
