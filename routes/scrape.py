@@ -56,11 +56,11 @@ async def bulk_scraping(pub: Publication = Body(...)):
 
         browser = await uc.start(
             headless=False,
-            # user_data_dir=os.getcwd()
-            # + "/profile",  # will be automatically cleaned up when finished if DNE
+            user_data_dir=os.getcwd()
+            + "/profile",  # will be automatically cleaned up when finished if DNE
             # browser_args=['--some-browser-arg=true', '--some-other-option'],
             lang="en-US",  # this could set iso-language-code in navigator, it was not recommended to change according to docs
-            sandbox=False,
+            no_sandbox=True,
         )
         tab = await browser.get(f"https://doi.org/{publication.doi}")
 
