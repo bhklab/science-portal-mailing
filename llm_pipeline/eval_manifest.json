@@ -1,0 +1,20 @@
+[
+  {
+    "pdf": "llm_pipeline/Data/2022_Lefebvre.pdf",
+    "doi": "10.1148/radiol.212873",
+    "url": "https://pubs.rsna.org/doi/abs/10.1148/radiol.212873",
+    "output": "llm_pipeline/Results/Extraction/2022_Lefebvre_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2026_Kerr.pdf",
+    "doi": "10.1186/s13073-025-01583-w",
+    "url": "https://link.springer.com/article/10.1186/s13073-025-01583-w",
+    "output": "llm_pipeline/Results/Extraction/2026_Kerr_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2020_Dobson.pdf",
+    "doi": "10.1158/2159-8290.CD-19-1059",
+    "url": "https://aacrjournals.org/cancerdiscovery/article-abstract/10/4/568/2601",
+    "output": "llm_pipeline/Results/Extraction/2020_Dobson_output.json"
+  }
+]

@@ -15,6 +15,7 @@ import pathlib
 import requests
 import time
 from typing import List
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -25,19 +26,23 @@ from pydantic import BaseModel, Field
 
 load_dotenv(pathlib.Path(__file__).parent / ".env")
 
-DEFAULT_MODEL = "gemini-3.1-pro-preview"
+DEFAULT_MODEL = "gemini-3.5-flash"
 
 MODELS = {
-    "gemini-3.1-pro-preview": {"model_id": "gemini-3.1-pro-preview", 
-                               "temperature": 0.0, 
+    "gemini-3.5-flash":       {"model_id": "gemini-3.5-flash",
+                                "temperature": 0.0,
+                                "timeout": 300},
+
+    "gemini-3.1-pro-preview": {"model_id": "gemini-3.1-pro-preview",
+                               "temperature": 0.0,
                                "timeout": 180},
     
     "gemini-3-flash-preview":  {"model_id": "gemini-3-flash-preview",
                                 "temperature": 0.0,
                                 "timeout": 300},
     
-    "gemini-3.1-flash-lite":  {"model_id": "gemini-3.1-flash-lite",  
-                                "temperature": 0.0, 
+    "gemini-3.1-flash-lite":  {"model_id": "gemini-3.1-flash-lite",
+                                "temperature": 0.0,
                                 "timeout": 180},
 }
 
@@ -302,7 +307,7 @@ Subcategory mapping (place each URL in the matching subcategory field):
   packages.pypi          → pypi.org
   packages.CRAN          → cran.r-project.org
   miscellaneous.IEEE     → ieee.org URLs
-  miscellaneous.pdf      → direct .pdf file URLs
+  miscellaneous.pdf      → direct .pdf file URLs for supplementary materials only — do NOT include the article's own PDF
   miscellaneous.docx     → direct .docx file URLs
   miscellaneous.zip      → direct .zip file URLs
   miscellaneous.ppt      → direct .ppt file URLs
@@ -366,7 +371,7 @@ Subcategory mapping:
   packages.pypi          → pypi.org
   packages.CRAN          → cran.r-project.org
   miscellaneous.IEEE     → ieee.org URLs
-  miscellaneous.pdf      → .pdf file URLs
+  miscellaneous.pdf      → .pdf file URLs for supplementary materials only — do NOT include the article's own PDF
   miscellaneous.docx     → .docx file URLs
   miscellaneous.zip      → .zip file URLs
   miscellaneous.ppt      → .ppt file URLs
@@ -481,6 +486,7 @@ async def fetch_page_links(url: str) -> str:
             continue
         if href.startswith(("mailto:", "#", "javascript:")):
             continue
+        href = urljoin(url, href)
         if href in seen:
             continue
         seen.add(href)
@@ -556,12 +562,14 @@ async def main():
     parser.add_argument("--doi", required=True, help="DOI of the paper (e.g. 10.1038/s41586-021-03819-2)")
     parser.add_argument("--url", default=None, help="Publisher page URL for supplementary link extraction (optional)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model name (default: {DEFAULT_MODEL}). Available: {list(MODELS.keys())}")
-    parser.add_argument("--output", default="Results/output.json", help="Path to save output JSON")
+    parser.add_argument("--output", default=None, help="Path to save output JSON (default: Results/<pdf_stem>_output.json)")
     args = parser.parse_args()
 
     pdf_path = pathlib.Path(args.pdf)
     if not pdf_path.exists():
         raise FileNotFoundError(f"PDF not found: {pdf_path}")
+
+    output_path = pathlib.Path(args.output) if args.output else pathlib.Path("Results") / f"{pdf_path.stem}_output.json"
 
     # Step 1: Crossref
     t_crossref_start = time.time()
@@ -622,7 +630,6 @@ async def main():
         "final": final,
     }
 
-    output_path = pathlib.Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
