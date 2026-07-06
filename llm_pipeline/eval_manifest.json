@@ -16,5 +16,17 @@
     "doi": "10.1158/2159-8290.CD-19-1059",
     "url": "https://aacrjournals.org/cancerdiscovery/article-abstract/10/4/568/2601",
     "output": "llm_pipeline/Results/Extraction/2020_Dobson_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2025_Mettu.pdf",
+    "doi": "10.1039/d4sc07532c",
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2025/sc/d4sc07532c",
+    "output": "llm_pipeline/Results/Extraction/2025_Mettu_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2023_Iyer.pdf",
+    "doi": "10.1016/j.chembiol.2023.06.005",
+    "url": "https://www.cell.com/cell-chemical-biology/fulltext/S2451-9456(23)00160-5",
+    "output": "llm_pipeline/Results/Extraction/2023_Iyer_output.json"
   }
 ]

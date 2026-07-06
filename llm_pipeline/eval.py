@@ -49,15 +49,34 @@ def normalize_url(url: str) -> str:
 # Flattening
 # ---------------------------------------------------------------------------
 
-def flatten_gt(supp: dict) -> dict:
-    """GT supplementary: {cat: {subcat: [url_str]}} → {cat.subcat: {urls}}"""
+def is_article_pdf(url: str, doi: str) -> bool:
+    """Return True if the URL is the article's own PDF rather than a supplementary file."""
+    url_lower = url.lower()
+    # Common article PDF path patterns used by publishers
+    if any(p in url_lower for p in ("/article-pdf/", "/article_pdf/")):
+        return True
+    # Springer-style: URL filename is the DOI suffix (e.g. .../s13073-025-01583-w.pdf)
+    doi_suffix = doi.split("/")[-1].lower()
+    if url_lower.endswith(f"{doi_suffix}.pdf"):
+        return True
+    return False
+
+
+def flatten_gt(supp: dict, doi: str = "") -> dict:
+    """GT supplementary: {cat: {subcat: [url_str]}} → {cat.subcat: {urls}}
+    Filters article PDFs out of miscellaneous.pdf since the LLM is instructed not to include them.
+    """
     result = {}
     for cat, val in supp.items():
         if not isinstance(val, dict):
             continue
         for subcat, urls in val.items():
             if isinstance(urls, list) and urls:
-                norm = {normalize_url(u) for u in urls if u}
+                filtered = [
+                    u for u in urls
+                    if u and not (cat == "miscellaneous" and subcat == "pdf" and is_article_pdf(u, doi))
+                ]
+                norm = {normalize_url(u) for u in filtered}
                 if norm:
                     result[f"{cat}.{subcat}"] = norm
     return result
@@ -104,7 +123,7 @@ def metrics(gt_urls: set, llm_urls: set) -> dict:
 # ---------------------------------------------------------------------------
 
 def eval_paper(gt_record: dict, output: dict) -> dict:
-    gt_flat = flatten_gt(gt_record.get("supplementary") or {})
+    gt_flat = flatten_gt(gt_record.get("supplementary") or {}, doi=gt_record.get("doi", ""))
     llm_flat = flatten_llm(output["final"]["supplementary"])
 
     all_cats = sorted(set(gt_flat) | set(llm_flat))
