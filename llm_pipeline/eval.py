@@ -151,6 +151,15 @@ def eval_paper(gt_record: dict, output: dict) -> dict:
 
     fp_only = [c for c, v in per_cat.items() if v["gt_count"] == 0 and v["llm_count"] > 0]
 
+    # Fields the LLM captured that GT does not have (across ALL categories,
+    # not just fp_only ones — e.g. an extra url within a category GT partially covers)
+    extra_fields = [
+        {"category": cat, "url": u}
+        for cat, v in sorted(per_cat.items())
+        for u in v["llm_urls"]
+        if u not in set(v["gt_urls"])
+    ]
+
     return {
         "doi": gt_record["doi"],
         "name": gt_record.get("name", ""),
@@ -162,6 +171,10 @@ def eval_paper(gt_record: dict, output: dict) -> dict:
             "f1": round(agg_f, 3),
             "gt_category_count": len(gt_cats),
             "fp_only_categories": fp_only,
+        },
+        "llm_extra_fields": {
+            "count": len(extra_fields),
+            "fields": extra_fields,
         },
     }
 
@@ -186,7 +199,6 @@ def print_results(results: list) -> None:
         print("-" * W)
 
         gt_cats = {c: v for c, v in per_cat.items() if v["gt_count"] > 0}
-        fp_cats = {c: v for c, v in per_cat.items() if v["gt_count"] == 0 and v["llm_count"] > 0}
 
         if gt_cats:
             print(f"  {'Category':<33} {'GT':>3} {'LLM':>3} {'TP':>3} {'FP':>3} {'FN':>3}  "
@@ -199,12 +211,11 @@ def print_results(results: list) -> None:
         else:
             print("  (no supplementary resources in GT for this paper)")
 
-        if fp_cats:
-            print(f"\n  False positives (LLM found, not in GT):")
-            for cat, m in sorted(fp_cats.items()):
-                preview = m["llm_urls"][:2]
-                extra = f" (+{len(m['llm_urls'])-2} more)" if len(m["llm_urls"]) > 2 else ""
-                print(f"    {cat}: {', '.join(preview)}{extra}")
+        extra = r["llm_extra_fields"]
+        if extra["count"]:
+            print(f"\n  LLM captured, GT missed ({extra['count']}):")
+            for f in extra["fields"]:
+                print(f"    [{f['category']}] {f['url']}")
 
         print(f"\n  Aggregate ({agg['gt_category_count']} GT categories):  "
               f"Precision={agg['precision']:.3f}  "
