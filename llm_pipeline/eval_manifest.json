@@ -18,7 +18,7 @@
     "output": "llm_pipeline/Results/Extraction/2020_Dobson_output.json"
   },
   {
-    "pdf": "llm_pipeline/Data/2025_Mettu.pdf",
+    "pdf": "llm_pipeline/Data/2025_Mettu.pdf",  
     "doi": "10.1039/d4sc07532c",
     "url": "https://pubs.rsc.org/en/content/articlehtml/2025/sc/d4sc07532c",
     "output": "llm_pipeline/Results/Extraction/2025_Mettu_output.json"
@@ -28,5 +28,41 @@
     "doi": "10.1016/j.chembiol.2023.06.005",
     "url": "https://www.cell.com/cell-chemical-biology/fulltext/S2451-9456(23)00160-5",
     "output": "llm_pipeline/Results/Extraction/2023_Iyer_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2022_Mahdipour-Shirayeh.pdf",
+    "doi": "10.1093/bib/bbab413",
+    "url": "https://academic.oup.com/bib/article/doi/10.1093/bib/bbab413/6396789",
+    "output": "llm_pipeline/Results/Extraction/2022_Mahdipour-Shirayeh_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2022_Osmond.pdf",
+    "doi": "10.1016/j.gim.2021.08.014",
+    "url": "https://www.sciencedirect.com/science/article/pii/S109836002101128X",
+    "output": "llm_pipeline/Results/Extraction/2022_Osmond_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2022_Wang.pdf",
+    "doi": "10.1038/s41467-022-34408-0",
+    "url": "https://www.nature.com/articles/s41467-022-34408-0",
+    "output": "llm_pipeline/Results/Extraction/2022_Wang_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2022_Zhou.pdf",
+    "doi": "10.1093/nar/gkac966",
+    "url": "https://academic.oup.com/nar/article/51/D1/D1300/6814464",
+    "output": "llm_pipeline/Results/Extraction/2022_Zhou_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2020_Traverso.pdf",
+    "doi": "10.1016/j.ejmp.2020.02.010",
+    "url": "https://www.sciencedirect.com/science/article/pii/S1120179720300417",
+    "output": "llm_pipeline/Results/Extraction/2020_Traverso_output.json"
+  },
+  {
+    "pdf": "llm_pipeline/Data/2026_Marsilla.pdf",
+    "doi": "10.1016/j.phro.2026.101015",
+    "url": "https://www.sciencedirect.com/science/article/pii/S2405631626001156",
+    "output": "llm_pipeline/Results/Extraction/2026_Marsilla_output.json"
   }
 ]
