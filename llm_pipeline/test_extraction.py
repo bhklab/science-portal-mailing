@@ -480,7 +480,7 @@ async def fetch_page_links(url: str) -> str:
             headless=False,
         )
         page = await browser.new_page()
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
         await page.wait_for_timeout(3000)   # let Cloudflare JS challenge resolve
         html = await page.content()
         await browser.close()
