@@ -244,7 +244,7 @@ General rules:
 - Authors should be formatted as "LastName, FirstName" separated by semicolons.
 - For supplementary resources, only include resources explicitly mentioned in the paper (URLs, accession numbers, or named reagents/models).
 - Do not generate or guess URLs — only include ones explicitly present in the text.
-- Do not include resources from the references section unless their URL or accession number is explicitly stated.
+- Never include a resource whose only appearance is a bibliography/reference-list entry, even if that entry contains a URL or accession number. Only include resources that the main text (e.g. Methods, Results, Data/Code Availability statement) explicitly points to as belonging to this paper.
 - Always output full URLs, not bare accession numbers. Resolve accessions using the canonical base URLs below.
 - A link classified into one subcategory should not appear in another.
 - If a resource does not fit any predefined subcategory, put it into otherLinks.
