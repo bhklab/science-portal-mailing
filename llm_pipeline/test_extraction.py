@@ -26,9 +26,13 @@ from pydantic import BaseModel, Field
 
 load_dotenv(pathlib.Path(__file__).parent / ".env")
 
-DEFAULT_MODEL = "gemini-3.5-flash"
+DEFAULT_MODEL = "gemini-3.8-flash"
 
 MODELS = {
+    "gemini-3.8-flash":       {"model_id": "gemini-3.8-flash",
+                                "temperature": 0.0,
+                                "timeout": 300},
+
     "gemini-3.5-flash":       {"model_id": "gemini-3.5-flash",
                                 "temperature": 0.0,
                                 "timeout": 300},
