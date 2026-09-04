@@ -109,10 +109,23 @@ async def main():
     parser.add_argument("--model", default=DEFAULT_MODEL, choices=list(MODELS.keys()),
                         help=f"Gemini model (default: {DEFAULT_MODEL})")
     parser.add_argument("--force", action="store_true", help="Re-run even if output exists")
+    parser.add_argument("--only", nargs="+", metavar="DOI_OR_NAME",
+                        help="Only run entries whose DOI or PDF filename contains any of these "
+                             "substrings (case-insensitive), e.g. --only Dobson Kerr")
     args = parser.parse_args()
 
     with open(MANIFEST_PATH) as f:
         manifest = json.load(f)
+
+    if args.only:
+        needles = [n.lower() for n in args.only]
+        manifest = [
+            e for e in manifest
+            if any(n in e["doi"].lower() or n in e["pdf"].lower() for n in needles)
+        ]
+        if not manifest:
+            print(f"[ERROR] No manifest entries matched --only {args.only}")
+            return
 
     has_urls = sum(1 for e in manifest if e.get("url"))
     print(f"Running extraction for {len(manifest)} papers  |  model={args.model}  |  page scraping={has_urls}/{len(manifest)}")
