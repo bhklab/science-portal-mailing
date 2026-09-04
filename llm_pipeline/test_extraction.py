@@ -447,6 +447,15 @@ def fetch_gemini(pdf_path: pathlib.Path, model_name: str) -> Pub:
         pass
 
     pub = response.parsed
+    if pub is None:
+        finish_reason = None
+        if response.candidates:
+            finish_reason = response.candidates[0].finish_reason
+        raise Exception(
+            f"Gemini returned no parsable output for {pdf_path.name} "
+            f"(finish_reason={finish_reason}). "
+            f"Raw response text: {response.text[:500] if response.text else '<empty>'}"
+        )
     # print(json.dumps(pub.model_dump(), indent=2))
     return pub, {
         "upload_s": round(t_upload_elapsed, 1),
