@@ -57,13 +57,16 @@ async def run_paper(entry: dict, model: str, force: bool) -> None:
 
     gemini_pdf, pdf_timing = fetch_gemini(pdf_path, model)
 
-    # Page scraping (only if url is provided in manifest)
+    # Page scraping (only if url is provided in manifest) — best-effort, never fatal
     page_supplementary = None
     page_timing = {}
     if url:
-        links_text, page_scrape_s = await fetch_page_links(url)
-        page_supplementary, page_timing = classify_page_links(links_text, model)
-        page_timing["page_scrape_s"] = page_scrape_s
+        try:
+            links_text, page_scrape_s = await fetch_page_links(url)
+            page_supplementary, page_timing = classify_page_links(links_text, model)
+            page_timing["page_scrape_s"] = page_scrape_s
+        except Exception as e:
+            print(f"[WARN] Page scraping failed for {url} ({e!r}) — falling back to PDF-only extraction")
 
     merged_supplementary = (
         merge_supplementary(gemini_pdf.supplementary, page_supplementary)
