@@ -23,6 +23,7 @@ from test_extraction import (
     fetch_gemini,
     fetch_page_links,
     classify_page_links,
+    crawl_other_links,
     merge_supplementary,
     DEFAULT_MODEL,
     MODELS,
@@ -68,11 +69,17 @@ async def run_paper(entry: dict, model: str, force: bool) -> None:
         except Exception as e:
             print(f"[WARN] Page scraping failed for {url} ({e!r}) — falling back to PDF-only extraction")
 
-    merged_supplementary = (
-        merge_supplementary(gemini_pdf.supplementary, page_supplementary)
-        if page_supplementary
-        else gemini_pdf.supplementary
+    # Crawl otherLinks that look like project/resource-index sites — best-effort
+    already_crawled = {url} if url else set()
+    other_link_supplementary, other_link_timings = await crawl_other_links(
+        gemini_pdf.otherLinks, model, already_crawled
     )
+
+    merged_supplementary = gemini_pdf.supplementary
+    if page_supplementary:
+        merged_supplementary = merge_supplementary(merged_supplementary, page_supplementary)
+    if other_link_supplementary:
+        merged_supplementary = merge_supplementary(merged_supplementary, other_link_supplementary)
 
     final = gemini_pdf.model_dump()
     final["date"] = crossref_data["date"]
@@ -93,10 +100,12 @@ async def run_paper(entry: dict, model: str, force: bool) -> None:
             "gemini_pdf_total_s": pdf_timing["total_s"],
             **({"page_scrape_s": page_timing["page_scrape_s"],
                 "gemini_page_s": page_timing["page_classify_s"]} if page_timing else {}),
+            **({"other_links": other_link_timings} if other_link_timings else {}),
         },
         "crossref": crossref_data,
         "gemini_pdf": gemini_pdf.model_dump(),
         **({"gemini_page": page_supplementary.model_dump()} if page_supplementary else {}),
+        **({"gemini_other_links": other_link_supplementary.model_dump()} if other_link_supplementary else {}),
         "final": final,
     }
 

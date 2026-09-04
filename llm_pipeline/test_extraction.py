@@ -14,8 +14,8 @@ import os
 import pathlib
 import requests
 import time
-from typing import List
-from urllib.parse import urljoin
+from typing import List, Optional, Set
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -566,6 +566,75 @@ def merge_supplementary(a: Supplementary, b: Supplementary) -> Supplementary:
 
 
 # ---------------------------------------------------------------------------
+# otherLinks crawling
+# ---------------------------------------------------------------------------
+
+# Domains that are never project/resource-index sites worth crawling —
+# publishers, journals, DOI redirectors, and reference/profile sites.
+SKIP_OTHER_LINK_DOMAINS = (
+    "doi.org",
+    "sciencedirect.com",
+    "nature.com",
+    "springer.com",
+    "springerlink.com",
+    "wiley.com",
+    "onlinelibrary.wiley.com",
+    "aacrjournals.org",
+    "pubs.rsna.org",
+    "pubs.rsc.org",
+    "cell.com",
+    "academic.oup.com",
+    "ieee.org",
+    "pubmed.ncbi.nlm.nih.gov",
+    "ncbi.nlm.nih.gov",
+    "researchgate.net",
+    "biorxiv.org",
+    "medrxiv.org",
+    "orcid.org",
+    "crossref.org",
+    "scholar.google.com",
+)
+
+
+def _is_crawlable_other_link(url: str) -> bool:
+    if not url:
+        return False
+    host = urlparse(url).netloc.lower()
+    if not host:
+        return False
+    return not any(host == d or host.endswith(f".{d}") for d in SKIP_OTHER_LINK_DOMAINS)
+
+
+async def crawl_other_links(
+    other_links: List[OtherLink], model_name: str, already_crawled: Set[str]
+) -> tuple:
+    """Best-effort: visit project/resource websites named in otherLinks and
+    classify the links found on them. Mutates already_crawled with visited URLs."""
+    combined: Optional[Supplementary] = None
+    timings = []
+    for entry in other_links:
+        url = entry.link
+        if not url or url in already_crawled or not _is_crawlable_other_link(url):
+            continue
+        already_crawled.add(url)
+
+        print(f"\n{'='*60}")
+        print(f"OTHER LINK CRAWL: {entry.name} -> {url}")
+        print(f"{'='*60}")
+        try:
+            links_text, scrape_s = await fetch_page_links(url)
+            supplementary, classify_timing = classify_page_links(links_text, model_name)
+            classify_timing["url"] = url
+            classify_timing["page_scrape_s"] = scrape_s
+            timings.append(classify_timing)
+            combined = supplementary if combined is None else merge_supplementary(combined, supplementary)
+        except Exception as e:
+            print(f"[WARN] otherLinks crawl failed for {url} ({e!r}) — skipping")
+
+    return combined, timings
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -600,13 +669,20 @@ async def main():
         page_supplementary, page_timing = classify_page_links(links_text, args.model)
         page_timing["page_scrape_s"] = page_scrape_s
 
-    # Step 4: Merge supplementary
-    if page_supplementary:
-        merged_supplementary = merge_supplementary(gemini_pdf.supplementary, page_supplementary)
-    else:
-        merged_supplementary = gemini_pdf.supplementary
+    # Step 4: Crawl otherLinks that look like project/resource-index sites
+    already_crawled = {args.url} if args.url else set()
+    other_link_supplementary, other_link_timings = await crawl_other_links(
+        gemini_pdf.otherLinks, args.model, already_crawled
+    )
 
-    # Step 5: Assemble final — override date/type/publisher with Crossref
+    # Step 5: Merge supplementary
+    merged_supplementary = gemini_pdf.supplementary
+    if page_supplementary:
+        merged_supplementary = merge_supplementary(merged_supplementary, page_supplementary)
+    if other_link_supplementary:
+        merged_supplementary = merge_supplementary(merged_supplementary, other_link_supplementary)
+
+    # Step 6: Assemble final — override date/type/publisher with Crossref
     final = gemini_pdf.model_dump()
     final["date"] = crossref_data["date"]
     final["type"] = crossref_data["type"]
@@ -624,6 +700,8 @@ async def main():
     if page_timing:
         print(f"Page scrape (Playwright): {page_timing['page_scrape_s']}s")
         print(f"Gemini page classify:     {page_timing['page_classify_s']}s")
+    for t in other_link_timings:
+        print(f"otherLinks crawl ({t['url']}): scrape {t['page_scrape_s']}s, classify {t['page_classify_s']}s")
 
     output = {
         "doi": args.doi,
@@ -636,10 +714,12 @@ async def main():
             "gemini_pdf_inference_s": pdf_timing["inference_s"],
             "gemini_pdf_total_s": pdf_timing["total_s"],
             **({"page_scrape_s": page_timing["page_scrape_s"], "gemini_page_s": page_timing["page_classify_s"]} if page_timing else {}),
+            **({"other_links": other_link_timings} if other_link_timings else {}),
         },
         "crossref": crossref_data,
         "gemini_pdf": gemini_pdf.model_dump(),
         **({"gemini_page": page_supplementary.model_dump()} if page_supplementary else {}),
+        **({"gemini_other_links": other_link_supplementary.model_dump()} if other_link_supplementary else {}),
         "final": final,
     }
 
