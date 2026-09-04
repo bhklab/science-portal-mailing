@@ -141,6 +141,13 @@ class MiscLinks(BaseModel):
     zip: List[Resource] = []
     ppt: List[Resource] = []
 
+class OtherLink(BaseModel):
+    name: str = ""
+    recommendedCategory: str = ""
+    description: str = ""
+    link: str = ""
+
+
 class Supplementary(BaseModel):
     code: CodeLinks = Field(default_factory=CodeLinks)
     data: DataLinks = Field(default_factory=DataLinks)
@@ -157,11 +164,14 @@ class Supplementary(BaseModel):
     biobanks: List[NonURLResource] = []
 
 
-class OtherLink(BaseModel):
-    name: str = ""
-    recommendedCategory: str = ""
-    description: str = ""
-    link: str = ""
+class ClassifiedSupplementary(Supplementary):
+    """Supplementary, extended with a catch-all for links found while
+    classifying a scraped webpage that don't fit any subcategory above.
+    Kept separate from Supplementary (rather than adding otherLinks there
+    directly) so the PDF-extraction schema (Pub.supplementary) has no
+    otherLinks slot to ambiguously compete with Pub's own top-level
+    otherLinks field."""
+    otherLinks: List[OtherLink] = []
 
 
 class Pub(BaseModel):
@@ -325,12 +335,13 @@ You are classifying URLs extracted from a scientific publication's webpage.
 Below is a list of links in "label: url" format. Classify each URL into the correct subcategory field.
 
 Rules:
-- Only include URLs that belong to a supplementary resource category (data, code, containers, etc.).
-- Ignore navigation links, author profiles, journal homepages, social media, citation counts, and reference links.
+- Only classify URLs that belong to a supplementary resource category (data, code, containers, etc.).
+- Ignore navigation links, author profiles, journal homepages, social media, citation counts, and reference links entirely — do not put these in otherLinks either.
 - Output full URLs exactly as given — do not modify them.
 - A URL classified into one subcategory should not appear in another.
 - For each resource, set `original: true` (these are publisher-hosted supplementary files deposited by the authors).
 - Leave `description` as empty string — descriptions will be filled from the PDF extraction.
+- If a URL is clearly a supplementary resource (a dataset, code repo, protocol, registered trial, etc.) but does not fit any subcategory below, put it in `otherLinks` with your best-guess `recommendedCategory` instead of dropping it.
 
 Subcategory mapping:
   code.github            → github.com URLs
@@ -534,7 +545,7 @@ def classify_page_links(links_text: str, model_name: str) -> tuple:
         config=types.GenerateContentConfig(
             temperature=temperature,
             response_mime_type="application/json",
-            response_schema=Supplementary,
+            response_schema=ClassifiedSupplementary,
         ),
     )
     elapsed = time.time() - start
@@ -544,11 +555,20 @@ def classify_page_links(links_text: str, model_name: str) -> tuple:
 
 
 def merge_supplementary(a: Supplementary, b: Supplementary) -> Supplementary:
+    """a and b must be the same Supplementary (sub)class — the result is
+    constructed as type(a), so pass two ClassifiedSupplementary instances if
+    you need the merged result's otherLinks field preserved."""
     a_dict = a.model_dump()
     b_dict = b.model_dump()
     merged = {}
     for category, a_val in a_dict.items():
-        if isinstance(a_val, list):
+        if category == "otherLinks":
+            # List[OtherLink] — deduplicate by link
+            b_val = b_dict[category]
+            seen = {r["link"] for r in a_val if r["link"]}
+            extras = [r for r in b_val if r["link"] not in seen]
+            merged[category] = a_val + extras
+        elif isinstance(a_val, list):
             # Top-level List[NonURLResource] — deduplicate by identifier, fall back to name
             b_val = b_dict[category]
             seen = {r["identifier"] or r["name"] for r in a_val if r["identifier"] or r["name"]}
@@ -562,7 +582,21 @@ def merge_supplementary(a: Supplementary, b: Supplementary) -> Supplementary:
                 seen_urls = {r["url"] for r in a_resources if r["url"]}
                 extras = [r for r in b_resources if r["url"] not in seen_urls]
                 merged[category][subcat] = a_resources + extras
-    return Supplementary(**merged)
+    return type(a)(**merged)
+
+
+def combine_other_links(pdf_other_links: List[OtherLink], supplementary_other_links: List[OtherLink]) -> list:
+    """Merge PDF-derived otherLinks (Pub.otherLinks) with webpage-derived
+    otherLinks (Supplementary.otherLinks) into one deduplicated list, for the
+    final output's single otherLinks field."""
+    combined = [o.model_dump() for o in pdf_other_links]
+    seen = {o["link"] for o in combined if o["link"]}
+    for o in supplementary_other_links:
+        d = o.model_dump()
+        if d["link"] and d["link"] not in seen:
+            seen.add(d["link"])
+            combined.append(d)
+    return combined
 
 
 # ---------------------------------------------------------------------------
@@ -610,7 +644,7 @@ async def crawl_other_links(
 ) -> tuple:
     """Best-effort: visit project/resource websites named in otherLinks and
     classify the links found on them. Mutates already_crawled with visited URLs."""
-    combined: Optional[Supplementary] = None
+    combined: Optional[ClassifiedSupplementary] = None
     timings = []
     for entry in other_links:
         url = entry.link
@@ -676,7 +710,7 @@ async def main():
     )
 
     # Step 5: Merge supplementary
-    merged_supplementary = gemini_pdf.supplementary
+    merged_supplementary = ClassifiedSupplementary(**gemini_pdf.supplementary.model_dump())
     if page_supplementary:
         merged_supplementary = merge_supplementary(merged_supplementary, page_supplementary)
     if other_link_supplementary:
@@ -689,6 +723,7 @@ async def main():
     final["publisher"] = crossref_data["publisher"]
     final["citations"] = crossref_data["citations"]
     final["supplementary"] = merged_supplementary.model_dump()
+    final["otherLinks"] = combine_other_links(gemini_pdf.otherLinks, merged_supplementary.otherLinks)
 
     print(f"\n{'='*60}")
     print(f"TIMING SUMMARY")

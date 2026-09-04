@@ -25,6 +25,8 @@ from test_extraction import (
     classify_page_links,
     crawl_other_links,
     merge_supplementary,
+    combine_other_links,
+    ClassifiedSupplementary,
     DEFAULT_MODEL,
     MODELS,
 )
@@ -75,7 +77,7 @@ async def run_paper(entry: dict, model: str, force: bool) -> None:
         gemini_pdf.otherLinks, model, already_crawled
     )
 
-    merged_supplementary = gemini_pdf.supplementary
+    merged_supplementary = ClassifiedSupplementary(**gemini_pdf.supplementary.model_dump())
     if page_supplementary:
         merged_supplementary = merge_supplementary(merged_supplementary, page_supplementary)
     if other_link_supplementary:
@@ -87,6 +89,7 @@ async def run_paper(entry: dict, model: str, force: bool) -> None:
     final["publisher"] = crossref_data["publisher"]
     final["citations"] = crossref_data["citations"]
     final["supplementary"] = merged_supplementary.model_dump()
+    final["otherLinks"] = combine_other_links(gemini_pdf.otherLinks, merged_supplementary.otherLinks)
 
     output = {
         "doi": doi,
